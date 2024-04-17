@@ -1,0 +1,10 @@
+create_table("transactions") {
+    t.Column("id", "integer", {primary: true})
+    t.Column("amount", "integer", {})
+    t.Column("currency", "string", {"Default": ""})
+    t.Column("last_four_digits", "string", {"default": ""})
+    t.Column("bank_return_code", "string", {"default": ""})
+    t.Column("transaction_status_id", "integer", {})
+    t.Column("created_at", "date", {})
+    t.Column("updated_at", "date", {})
+}

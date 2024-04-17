@@ -1,0 +1,4 @@
+go build -o online_store cmd/web/*.go
+export STRIPE_KEY="pk_test_51Ozc6nAnXv2I0ELkrfPDV4aSVwoPCbhc4RvaA4uaUoKjX0EnhyO0SezIVPpyUhPSVlCgYG1hs0cOlwi7iNmcY9VB00Xu2cxQVG"
+export STRIPE_SECRET="sk_test_51Ozc6nAnXv2I0ELk9xAVRQi4E5snbif4xHIt1O0cTDTO9V534LraTh0hFvaY6K9ONYDItm9HieNkt5o2KPZhQIhf00nPLTrlU5"
+./online_store
