@@ -21,6 +21,44 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: customers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.customers (
+    id integer NOT NULL,
+    first_name character varying(255) DEFAULT ''::character varying NOT NULL,
+    last_name character varying(255) DEFAULT ''::character varying NOT NULL,
+    email character varying(255) DEFAULT ''::character varying NOT NULL,
+    created_at date NOT NULL,
+    updated_at date NOT NULL
+);
+
+
+ALTER TABLE public.customers OWNER TO postgres;
+
+--
+-- Name: customers_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.customers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.customers_id_seq OWNER TO postgres;
+
+--
+-- Name: customers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
+
+
+--
 -- Name: dates; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -70,6 +108,7 @@ CREATE TABLE public.orders (
     id integer NOT NULL,
     dates_id integer NOT NULL,
     transaction_id integer NOT NULL,
+    customer_id integer NOT NULL,
     status_id integer NOT NULL,
     quantity integer NOT NULL,
     amount integer NOT NULL,
@@ -192,10 +231,14 @@ ALTER SEQUENCE public.transaction_status_id_seq OWNED BY public.transaction_stat
 CREATE TABLE public.transactions (
     id integer NOT NULL,
     amount integer NOT NULL,
-    currency character varying(255) NOT NULL,
+    currency character varying(255) DEFAULT ''::character varying NOT NULL,
+    payment_intent character varying(255) DEFAULT ''::character varying NOT NULL,
+    payment_method character varying(255) DEFAULT ''::character varying NOT NULL,
     last_four_digits character varying(255) DEFAULT ''::character varying NOT NULL,
     bank_return_code character varying(255) DEFAULT ''::character varying NOT NULL,
     transaction_status_id integer NOT NULL,
+    expiry_month integer DEFAULT 0 NOT NULL,
+    expiry_year integer DEFAULT 0 NOT NULL,
     created_at date NOT NULL,
     updated_at date NOT NULL
 );
@@ -265,6 +308,13 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: customers id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.customers_id_seq'::regclass);
+
+
+--
 -- Name: dates id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -304,6 +354,14 @@ ALTER TABLE ONLY public.transactions ALTER COLUMN id SET DEFAULT nextval('public
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
 
 
 --
@@ -367,6 +425,14 @@ ALTER TABLE ONLY public.users
 --
 
 CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USING btree (version);
+
+
+--
+-- Name: orders orders_customers_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_customers_id_fk FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

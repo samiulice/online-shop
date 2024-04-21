@@ -4,3 +4,7 @@ create_table("status") {
     t.Column("created_at", "date", {})
     t.Column("updated_at", "date", {})
 }
+
+sql("INSERT INTO status(name, created_at, updated_at) VALUES('Cleared', '2024-06-25 00:00:00', '2024-06-25 00:00:00')")
+sql("INSERT INTO status(name, created_at, updated_at) VALUES('Refunded', '2024-06-25 00:00:00', '2024-06-25 00:00:00')")
+sql("INSERT INTO status(name, created_at, updated_at) VALUES('Cancelled', '2024-06-25 00:00:00', '2024-06-25 00:00:00')")

@@ -47,7 +47,7 @@ func (app *application) serve() error {
 	}
 
 	app.infoLog.Printf("Starting HTTP Back end server in %s mode on port %d", app.config.env, app.config.port)
-
+	app.infoLog.Println(".....................................")
 	return srv.ListenAndServe()
 }
 
@@ -92,5 +92,4 @@ func main() {
 		app.errorLog.Println(err)
 		log.Fatal(err)
 	}
-
 }

@@ -17,7 +17,7 @@
 ## External packages used in this project
 
 - Uses [chi Router](http://github.com/go-chi/chi/v5) [Lightweight, idiomatic and composable router for building Go HTTP services]Uses
-- [cors Middleware](https://github.com/go-chi/cors) [CORS net/http middleware for Go]
+- Uses [cors Middleware](https://github.com/go-chi/cors) [CORS net/http middleware for Go]
 - Uses [stripe-go](https://github.com/stripe/stripe-go) [Go library for the Stripe API]
 - Uses [alex edwards SCS](http://github.com/alexedwards/scs/v2) [HTTP Session Management for Go]
 <!-- - Uses [nosurf](http://github.com/justinas/nosurf) [CSRF protection middleware for Go]

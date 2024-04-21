@@ -4,3 +4,8 @@ create_table("transaction_status") {
     t.Column("created_at", "date", {})
     t.Column("updated_at", "date", {})
 }
+sql("INSERT INTO transaction_status(name, created_at, updated_at) VALUES('Pending', '2024-06-25 00:00:00', '2024-06-25 00:00:00')")
+sql("INSERT INTO transaction_status(name, created_at, updated_at) VALUES('Cleared', '2024-06-25 00:00:00', '2024-06-25 00:00:00')")
+sql("INSERT INTO transaction_status(name, created_at, updated_at) VALUES('Declined', '2024-06-25 00:00:00', '2024-06-25 00:00:00')")
+sql("INSERT INTO transaction_status(name, created_at, updated_at) VALUES('Refunded', '2024-06-25 00:00:00', '2024-06-25 00:00:00')")
+sql("INSERT INTO transaction_status(name, created_at, updated_at) VALUES('Partially refunded', '2024-06-25 00:00:00', '2024-06-25 00:00:00')")

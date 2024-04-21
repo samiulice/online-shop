@@ -9,27 +9,27 @@ import (
 )
 
 type templateData struct {
-	StringMap       map[string]string
-	IntMap          map[string]int
-	FloatMap        map[string]float64
-	Data            map[string]interface{}
-	CSRFToken       string
-	Flash           string
-	Warning         string
-	Error           string
-	IsAuthenticated string
-	API             string
-	CSSVersion      string
+	StringMap            map[string]string
+	IntMap               map[string]int
+	FloatMap             map[string]float64
+	Data                 map[string]interface{}
+	CSRFToken            string
+	Flash                string
+	Warning              string
+	Error                string
+	IsAuthenticated      string
+	API                  string
+	CSSVersion           string
 	StripeSecretKey      string
-	StripePublishableKey      string
+	StripePublishableKey string
 }
 
 var functions = template.FuncMap{
-	"formatCurrency" : formatCurrency,
+	"formatCurrency": formatCurrency,
 }
 
-func formatCurrency(n int)(string) {
-	return fmt.Sprintf("$%.2f", float32(n/100))
+func formatCurrency(n int) string {
+	return fmt.Sprintf("$%.2f", float64(n)/100.0)
 }
 
 //go:embed templates
@@ -63,10 +63,10 @@ func (app *application) renderTemplate(w http.ResponseWriter, r *http.Request, p
 		td = &templateData{}
 	}
 
-	td = app.addDefaultData(td, r) 
+	td = app.addDefaultData(td, r)
 	err = t.Execute(w, td)
 
-	if err != nil{
+	if err != nil {
 		app.errorLog.Println(err)
 		return err
 	}

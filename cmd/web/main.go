@@ -1,23 +1,29 @@
 package main
 
 import (
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"online_store/internal/driver"
+	"online_store/internal/models"
 	"online_store/internal/repository"
 	"online_store/internal/repository/dbrepo"
 	"os"
 	"time"
+
+	"github.com/alexedwards/scs/v2"
 )
 
 const version = "1.0.0" //app version
 const cssVersion = "1"  //cssVersion informed the browser about the correct css version
+var session *scs.SessionManager
 
 // config holds app configuration
 type config struct {
+	host string //localhost or remoteserver
 	port int
 	env  string //production or development mode
 	api  string //URL that will be called for backend api
@@ -38,11 +44,12 @@ type application struct {
 	temlateCache map[string]*template.Template
 	version      string
 	DB           repository.DatabaseRepo
+	Session      *scs.SessionManager
 }
 
 func (app *application) serve() error {
 	srv := &http.Server{
-		Addr:              fmt.Sprintf(":%d", app.config.port),
+		Addr:              fmt.Sprintf("%s:%d", app.config.host, app.config.port),
 		Handler:           app.routes(),
 		IdleTimeout:       30 * time.Second,
 		ReadTimeout:       10 * time.Second,
@@ -51,15 +58,21 @@ func (app *application) serve() error {
 	}
 
 	app.infoLog.Printf("Starting HTTP server in %s mode on port %d", app.config.env, app.config.port)
+	app.infoLog.Println(".....................................")
 
 	return srv.ListenAndServe()
 }
 
 // main is the application entry point
 func main() {
+	//Register the types of sessional variable
+	gob.Register(models.TransactionData{})
+
+	//app config
 	var cfg config
 
 	//Getting command line arguments
+	flag.StringVar(&cfg.host, "host", "localhost", "Server port to listen on")
 	flag.IntVar(&cfg.port, "port", 4000, "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application Environment{development|production}")
 	flag.StringVar(&cfg.api, "api", "http://localhost:4001", "URL to api")
@@ -80,9 +93,15 @@ func main() {
 		return
 	}
 	defer dbConn.Close()
-	infoLog.Println("Connected to database")
 
 	db := dbrepo.NewDBRepo(dbConn)
+	infoLog.Println("Connected to database")
+
+	//set up session
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
+	session.Cookie.Persist = true //change it to false if it needs to delete cookie at the closing of the browser
+	session.Cookie.Secure = false //localhost is insecure connection which is used in InProduction mode
 
 	tc := make(map[string]*template.Template)
 
@@ -93,6 +112,7 @@ func main() {
 		temlateCache: tc,
 		version:      version,
 		DB:           db,
+		Session:      session,
 	}
 
 	err = app.serve()
@@ -100,5 +120,4 @@ func main() {
 		app.errorLog.Println(err)
 		log.Fatal(err)
 	}
-
 }

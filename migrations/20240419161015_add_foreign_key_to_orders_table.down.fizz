@@ -1,0 +1,1 @@
+drop_foreign_key("orders", "customer_id", {"if_exists": true})

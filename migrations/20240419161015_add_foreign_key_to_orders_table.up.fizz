@@ -1,0 +1,4 @@
+add_foreign_key("orders", "customer_id", {"customers": ["id"]}, {
+    "on_delete": "cascade",
+    "on_update": "cascade",
+})
