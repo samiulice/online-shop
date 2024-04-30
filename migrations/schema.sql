@@ -66,10 +66,14 @@ CREATE TABLE public.dates (
     id integer NOT NULL,
     name character varying(255) DEFAULT ''::character varying NOT NULL,
     description text DEFAULT ''::text NOT NULL,
-    package_size character varying(255) DEFAULT ''::character varying NOT NULL,
+    is_recurring integer DEFAULT 0 NOT NULL,
+    plan_id character varying(255) DEFAULT ''::character varying NOT NULL,
+    plan_title character varying(255) DEFAULT ''::character varying NOT NULL,
+    plan_description text DEFAULT ''::text NOT NULL,
     package_weight integer NOT NULL,
     package_price integer NOT NULL,
     stock_level integer NOT NULL,
+    image_link character varying(255) DEFAULT ''::character varying NOT NULL,
     created_at date NOT NULL,
     updated_at date NOT NULL,
     image character varying(255) DEFAULT ''::character varying NOT NULL
@@ -189,6 +193,46 @@ ALTER SEQUENCE public.status_id_seq OWNED BY public.status.id;
 
 
 --
+-- Name: tokens; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.tokens (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    email character varying(255) DEFAULT ''::character varying NOT NULL,
+    token_hash bytea NOT NULL,
+    expiry timestamp without time zone NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.tokens OWNER TO postgres;
+
+--
+-- Name: tokens_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.tokens_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.tokens_id_seq OWNER TO postgres;
+
+--
+-- Name: tokens_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.tokens_id_seq OWNED BY public.tokens.id;
+
+
+--
 -- Name: transaction_status; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -274,10 +318,12 @@ ALTER SEQUENCE public.transactions_id_seq OWNED BY public.transactions.id;
 
 CREATE TABLE public.users (
     id integer NOT NULL,
+    user_name character varying(255) DEFAULT ''::character varying NOT NULL,
     first_name character varying(255) DEFAULT ''::character varying NOT NULL,
     last_name character varying(255) DEFAULT ''::character varying NOT NULL,
     email character varying(255) DEFAULT ''::character varying NOT NULL,
     password character varying(255) DEFAULT ''::character varying NOT NULL,
+    image_link character varying(255) DEFAULT ''::character varying NOT NULL,
     created_at date NOT NULL,
     updated_at date NOT NULL
 );
@@ -333,6 +379,13 @@ ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.order
 --
 
 ALTER TABLE ONLY public.status ALTER COLUMN id SET DEFAULT nextval('public.status_id_seq'::regclass);
+
+
+--
+-- Name: tokens id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.tokens ALTER COLUMN id SET DEFAULT nextval('public.tokens_id_seq'::regclass);
 
 
 --
@@ -394,6 +447,14 @@ ALTER TABLE ONLY public.schema_migration
 
 ALTER TABLE ONLY public.status
     ADD CONSTRAINT status_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tokens tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.tokens
+    ADD CONSTRAINT tokens_pkey PRIMARY KEY (id);
 
 
 --

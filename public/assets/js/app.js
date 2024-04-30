@@ -51,7 +51,7 @@ function clock() {
 setInterval("clock()", 100);
 //End Homepage Clock
 
-// Start Toggle navbar
+//start: Toggle nav functions
 function toggleNav() {
     var navLinks = document.querySelector('.nav-links');
     var overlay = document.getElementById('overlay');
@@ -77,4 +77,19 @@ function toggleNav() {
       overlay.style.display = "none";
     }
   });
-  //End toggle navbar
+//End: Toggle nav functions
+
+//Start: togglePasswordVisibility toggle password between show and hide
+function togglePasswordVisibility() {
+  var passwordInput = document.getElementById("password");
+  var passwordIcon = document.getElementById("password-icon");
+
+  if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      passwordIcon.src = "/public/assets/icons/eye-solid.svg";
+  } else {
+      passwordInput.type = "password";
+      passwordIcon.src = "/public/assets/icons/eye-slash-solid.svg";
+  }
+}
+//End: togglePasswordVisibility

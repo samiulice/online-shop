@@ -1,0 +1,58 @@
+{{template "base" .}}
+
+
+{{define "title"}}
+    Payment Summary
+{{end}}
+
+{{define "content"}}
+<div class="container">
+    {{$txn := index .Data "txnData"}}
+    <div class="row">
+        <div class="col">
+            <h5 class="text-center">Payment Info</h5>
+            <table class="table table-primary table-hover">
+                <tbody>
+                <tr>
+                    <th>Customer Name:</th>
+                    <td><span id="first_name"><span id="last_name"></span></td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td><span id="email"></span></td>
+                </tr>
+                <tr>
+                    <th>Amount</th>
+                    <td><span id="amount"></span></td>
+                </tr>
+                <tr>
+                    <th>Last Four Digits</th>
+                    <td><span id="last_four_digits"></span></td>  
+                </tr>
+                <tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "js"}}
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    // Update HTML elements with retrieved values
+    document.getElementById("first_name").innerHTML = sessionStorage.getItem("first_name");
+    document.getElementById("last_name").innerHTML = sessionStorage.getItem("last_name");
+    document.getElementById("email").innerHTML = sessionStorage.getItem("email");
+    document.getElementById("amount").innerHTML = sessionStorage.getItem("amount");
+    document.getElementById("last_four_digits").innerHTML = sessionStorage.getItem("last_four_digits");
+
+    // Clear sessionStorage after updating HTML elements
+    sessionStorage.clear();
+});
+
+
+</script>
+{{end}}

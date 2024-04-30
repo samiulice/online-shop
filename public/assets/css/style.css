@@ -282,3 +282,126 @@
   }
 
   /* End homepage clock style */
+
+  /* Start Signin page style */
+  .wrapper {
+      font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+      background: #ffffff;
+      margin: 20px;
+      transition-delay: 10ms;
+      transition: background-color 0.3s;
+      width: 400px;
+      height: 480px;
+      margin-top: 50px;
+      border-radius: 10px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+  }
+
+  .top-icon-center {
+      background: #0d6efd !important;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      padding: 15px;
+      position: relative;
+      transform: translate(164px, -36px);
+  }
+
+  .label {
+      display: flex;
+      justify-content: center;
+  }
+
+  .login-form {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+  }
+
+  .input {
+      height: 50px;
+      width: 300px;
+      padding: 10px;
+      padding-left: 35px;
+      padding-right: 40px;
+      margin: 10px;
+      background: #E9ECEF;
+      border: 1px solid #0d6efd;
+      border-radius: 5px;
+  }
+
+  .input:focus {
+      background: #e1ffea;
+  }
+
+  .input-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 5px;
+      position: absolute;
+      transform: translate(20px, 20px);
+  }
+
+  .input-icon-end {
+      width: 40px;
+      height: 40px;
+      border-radius: 5px;
+      position: absolute;
+      transform: translate(-40px, 20px);
+  }
+
+  #submitBtn {
+      color: white;
+      display: flex;
+      padding-left: 0px;
+      justify-content: center;
+      gap: 20px;
+      background-color: #0d6efd;
+      transition: background-color 0.3s ease;
+      cursor: pointer;
+  }
+
+  #submitBtn:hover {
+      background-color: rgb(73, 196, 109);
+      color: black;
+      outline: none;
+      border-color: #bee2c6;
+      box-shadow: 0 0 5px #cbe5d0;
+  }
+
+  .horizontal-line {
+      width: 100%;
+      text-align: center;
+      border-bottom: 1px dotted black;
+      /* Adjust the color and style of the line */
+      line-height: 0.1em;
+      /* Adjust as needed to control the distance between lines */
+      margin: 20px 0;
+      /* Adjust the margin spacing */
+  }
+
+  .horizontal-line span {
+      background: #fff;
+      /* Background color to cover the line */
+      padding: 0 10px;
+      /* Adjust as needed to create padding around the text */
+  }
+
+  #logo {
+      width: 200px;
+      height: 80px;
+      transform: translate(50%);
+  }
+
+  #logo .go {
+      position: absolute;
+      transform: translate(50px, 10px);
+  }
+
+  #logo .fa {
+      position: absolute;
+      transform: translate(115px, 10px);
+  }

@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type templateData struct {
@@ -26,15 +27,23 @@ type templateData struct {
 
 var functions = template.FuncMap{
 	"formatCurrency": formatCurrency,
+	"formatDate":     formatDate,
 }
 
+// formatCurrency returns the currency with prefix $
 func formatCurrency(n int) string {
 	return fmt.Sprintf("$%.2f", float64(n)/100.0)
+}
+
+// FormatDate returns Date in a specific format
+func formatDate(t time.Time, format string) string {
+	return t.Format(format)
 }
 
 //go:embed templates
 var templateFS embed.FS
 
+// addDefaultData adds default variables to the templatedata
 func (app *application) addDefaultData(td *templateData, r *http.Request) *templateData {
 	td.API = app.config.api
 	td.StripePublishableKey = app.config.stripe.key

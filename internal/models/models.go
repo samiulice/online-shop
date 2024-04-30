@@ -25,16 +25,19 @@ import (
 
 // Date is the type for all dates that holds the info about it
 type Date struct {
-	ID            int       `json:"id"`
-	Name          string    `json:"name"`
-	Description   string    `json:"description"`
-	PackageSize   string    `json:"package_size"`   //size of package [Single, Family, Bulk]
-	PackageWeight int       `json:"package_weight"` //Weight of each package in kilogram
-	PackagePrice  int       `json:"package_price"`  //Package price in USD
-	StockLevel    int       `json:"stock_level"`    //number of packages in the stock
-	Image         string    `json:"iamge"`
-	CreatedAt     time.Time `json:"-"`
-	UpdatedAt     time.Time `json:"-"`
+	ID              int       `json:"id"`
+	Name            string    `json:"name"`             //name of the dates
+	Description     string    `json:"description"`      //description of the dates
+	IsRecurring     int       `json:"is_recurring"`     //1 for subscription plan, 0 for non-recurring or one time purchase plan
+	PlanID          string    `json:"plan_id"`          //stripe plan id
+	PlanTitle       string    `json:"plan_title"`       //title of the plan
+	PlanDescription string    `json:"plan_description"` //description of the plan
+	PackageWeight   int       `json:"package_weight"`   //Weight of each package in kilogram
+	PackagePrice    int       `json:"package_price"`    //Package price in USD
+	StockLevel      int       `json:"stock_level"`      //number of packages in the stock
+	ImageLink       string    `json:"iamge"`            //Image link of the dates
+	CreatedAt       time.Time `json:"-"`
+	UpdatedAt       time.Time `json:"-"`
 }
 
 // Order is the type for all orders
@@ -102,10 +105,12 @@ type TransactionData struct {
 // User is the type for users
 type User struct {
 	ID        int       `json:"id"`
+	UserName  string    `json:"user_name"`
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
+	ImageLink string    `json:"image_link"`
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 }

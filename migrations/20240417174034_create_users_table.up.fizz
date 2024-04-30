@@ -1,9 +1,11 @@
 create_table("users") {
     t.Column("id", "integer", {primary: true})
+    t.Column("user_name", "string", {"default": ""})
     t.Column("first_name", "string", {"default": ""})
     t.Column("last_name", "string", {"default": ""})
     t.Column("email", "string", {"default": ""})
     t.Column("password", "string", {"default": ""})
+    t.Column("image_link", "string", {"default": ""})
     t.Column("created_at", "date", {})
     t.Column("updated_at", "date", {})
 }

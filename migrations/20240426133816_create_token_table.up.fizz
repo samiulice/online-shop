@@ -1,0 +1,11 @@
+create_table("tokens") {
+    t.Column("id", "integer", {primary: true})
+    t.Column("user_id", "integer", {"unsigned": true})
+    t.Column("name", "string", {"size": 255})
+    t.Column("email", "string", {"default": ""})
+    t.Column("token_hash", "bytea")
+    t.Column("expiry", "timestamp", {})
+    t.Column("created_at", "timestamp", {})
+    t.Column("updated_at", "timestamp", {})
+}
+

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome</title>
+  <link rel="stylesheet" href="/public/assets/css/style.css">
+</head>
+<body>
+  <!--start navbar  -->
+  <nav class="navbar">
+    <div class="container">
+    <div class="burger" onclick="toggleNav()">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+    </div>
+    <ul class="nav-links" id="navLinks">
+        <li><a href="/">Home</a></li>
+        <li><a href="/virtual-terminal">Virtual Terminal</a></li>
+        <li><a href="/buy-dates/1">Buy Once</a></li>
+        <li><a href="/plans/bronze">Bronze Plan</a></li>
+        <li><a href="/signin">sign in</a></li>
+    </ul>
+    </div>
+</nav>
+
+<div class="overlay" id="overlay" onclick="closeNav()"></div>
+<!--end navbar -->
+  
+  <div class="row">
+    <div class="col">
+      <div class="clock">
+        <div>
+          <div class="info date"></div>
+          <div class="info day"></div>
+        </div>
+        <div class="dot"></div>
+        <div>
+          <div class="hour-hand"></div>
+          <div class="minute-hand"></div>
+          <div class="second-hand"></div>
+        </div>
+        <div>
+          <span class="h3 span">3</span>
+          <span class="h6 span">6</span>
+          <span class="h9 span">9</span>
+          <span class="h12 span">12</span>
+        </div>
+        <div class="diallines"></div>
+      </div>
+      
+    </div>
+  </div>
+
+  <script src="/public/assets/js/app.js"></script>
+  <script>
+    
+  </script>
+</body>
+</html>

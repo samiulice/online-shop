@@ -17,7 +17,7 @@ func (app *application) Home(w http.ResponseWriter, r *http.Request) {
 
 // VirtualTerminal handles the virtual termainal page for charge card
 func (app *application) VirtualTerminal(w http.ResponseWriter, r *http.Request) {
-	if err := app.renderTemplate(w, r, "terminal", &templateData{}, "stripe-js"); err != nil {
+	if err := app.renderTemplate(w, r, "terminal", &templateData{}); err != nil {
 		app.errorLog.Println(err)
 	}
 }
@@ -71,6 +71,21 @@ func (app *application) VirtualTerminalReceipt(w http.ResponseWriter, r *http.Re
 	if err := app.renderTemplate(w, r, "virtual-terminal-receipt", &templateData{
 		Data: data,
 	}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+// BuyOnce renders the page for buy single package dates
+func (app *application) BuyOnce(w http.ResponseWriter, r *http.Request) {
+	urlparts := strings.Split(r.RequestURI, "/")
+	dates_id, _ := strconv.Atoi(urlparts[2])
+
+	date, _ := app.DB.GetDate(dates_id)
+	data := make(map[string]interface{})
+	data["dates"] = date
+	if err := app.renderTemplate(w, r, "buy-once", &templateData{
+		Data: data,
+	}, "stripe-js-one-off"); err != nil {
 		app.errorLog.Println(err)
 	}
 }
@@ -177,23 +192,51 @@ func (app *application) Receipt(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// BuyOnce renders the page for buy one widget
-func (app *application) BuyOnce(w http.ResponseWriter, r *http.Request) {
-	urlparts := strings.Split(r.RequestURI, "/")
-	dates_id, _ := strconv.Atoi(urlparts[2])
-
-	date, _ := app.DB.GetDate(dates_id)
-	data := make(map[string]interface{})
-	data["date"] = date
-	if err := app.renderTemplate(w, r, "buy-once", &templateData{
+func (app *application) BronzePlan(w http.ResponseWriter, r *http.Request) {
+	dates, err := app.DB.GetDate(2) //ID = 2 for Bronze Plan
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	data := map[string]interface{}{
+		"dates": dates,
+	}
+	err = app.renderTemplate(w, r, "bronze-plan", &templateData{
 		Data: data,
-	}, "stripe-js"); err != nil {
+	})
+	// err = app.renderTemplate(w, r, "bronze-plan", &templateData{
+	// 	Data: data,
+	// }, "stripe-js-recurring")
+
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+}
+
+// BronzePlanReceipt renders the payment summary for Bronze plan
+func (app *application) BronzePlanReceipt(w http.ResponseWriter, r *http.Request) {
+
+	if err := app.renderTemplate(w, r, "bronze-receipt", &templateData{}); err != nil {
 		app.errorLog.Println(err)
 	}
 }
 
-//.........Helper functions for the handlers............//
+// Signin renders the Signin page for the app user
+func (app *application) Signin(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "signin", &templateData{}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
 
+// PageNotFound renders 404 page not found
+func (app *application) PageNotFound(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "page-not-found", &templateData{}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+// .........Helper functions for the handlers............//
 // SaveCustomer takes customer info as parameters, saves it to the database and returns its id
 func (app *application) SaveCustomer(c models.Customer) (int, error) {
 	var id int

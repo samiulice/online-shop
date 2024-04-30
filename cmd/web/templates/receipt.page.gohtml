@@ -6,65 +6,67 @@
 {{end}}
 
 {{define "content"}}
-{{$txn := index .Data "txnData"}}
-<div class="row">
-    <div class="col">
-        <h5 class="text-center">Cardholder Info</h5>
-        <table class="table table-primary table-hover">
-            <tbody>
-            <tr>
-                <th>First Name</th>
-                <td>{{$txn.FirstName}}</td>
-            </tr>
-            <tr>
-                <th>Last Name</th>
-                <td>{{$txn.LastName}}</td>
-            </tr>
-            <tr>
-                <th>Email</th>
-                <td>{{$txn.Email}}</td>
-            </tr>
-            <tr>
-                <th>Name on Card</th>
-                <td>{{$txn.NameOnCard}}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-    <div class="col">
-        <h5 class="text-center">Payment Info</h5>
-        <table class="table table-primary table-hover">
-            <tbody>
+<div class="container">
+    {{$txn := index .Data "txnData"}}
+    <div class="row">
+        <div class="col">
+            <h5 class="text-center">Cardholder Info</h5>
+            <table class="table table-primary table-hover">
+                <tbody>
                 <tr>
-                    <th>Intent</th>
-                    <td>{{$txn.PaymentIntent}}</td>
+                    <th>First Name</th>
+                    <td>{{$txn.FirstName}}</td>
                 </tr>
                 <tr>
-                    <th>Method</th>
-                    <td>{{$txn.PaymentMethod}}</td>
+                    <th>Last Name</th>
+                    <td>{{$txn.LastName}}</td>
                 </tr>
                 <tr>
-                    <th>Amount</th>
-                    <td>{{formatCurrency $txn.Amount}}</td>
+                    <th>Email</th>
+                    <td>{{$txn.Email}}</td>
                 </tr>
                 <tr>
-                    <th>Currency</th>
-                    <td>{{$txn.Currency}}</td>  
+                    <th>Name on Card</th>
+                    <td>{{$txn.NameOnCard}}</td>
                 </tr>
-                <tr>
-                    <th>Last Four Digits</th>
-                    <td>{{$txn.LastFourDigits}}</td>  
-                </tr>
-                <tr>
-                    <th>Bank Return Code</th>
-                    <td>{{$txn.BankReturnCode}}</td>  
-                </tr>
-                <tr>
-                    <th>Card Expiry(mm/yyyy)</th>
-                    <td>{{$txn.ExpiryMonth}}/{{$txn.ExpiryYear}}</td>  
-                </tr>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
+        <div class="col">
+            <h5 class="text-center">Payment Info</h5>
+            <table class="table table-primary table-hover">
+                <tbody>
+                    <tr>
+                        <th>Intent</th>
+                        <td>{{$txn.PaymentIntent}}</td>
+                    </tr>
+                    <tr>
+                        <th>Method</th>
+                        <td>{{$txn.PaymentMethod}}</td>
+                    </tr>
+                    <tr>
+                        <th>Amount</th>
+                        <td>{{formatCurrency $txn.Amount}}</td>
+                    </tr>
+                    <tr>
+                        <th>Currency</th>
+                        <td>{{$txn.Currency}}</td>  
+                    </tr>
+                    <tr>
+                        <th>Last Four Digits</th>
+                        <td>{{$txn.LastFourDigits}}</td>  
+                    </tr>
+                    <tr>
+                        <th>Bank Return Code</th>
+                        <td>{{$txn.BankReturnCode}}</td>  
+                    </tr>
+                    <tr>
+                        <th>Card Expiry(mm/yyyy)</th>
+                        <td>{{$txn.ExpiryMonth}}/{{$txn.ExpiryYear}}</td>  
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {{end}}
