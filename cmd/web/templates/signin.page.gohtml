@@ -21,6 +21,7 @@ Sign In
             <form action="/signin" method="post" name="signin_form" id="signin_form"
                 class="d-block needs-validation signin_form">
                 <!-- <input type="hidden" id="csrf_token" name="csrf_token" value={{.CSRFToken}}> -->
+                <input type="hidden" name="user_id", id="user_id">
                 <div>
                     <span class="input-icon">
                         <img src="/public/assets/icons/user-solid-default.svg" alt="user icon" width="20px"
@@ -148,7 +149,9 @@ Sign In
                     localStorage.setItem('token_expiry', data.authentication_token.expiry);
                     showSuccess();
                     setTimeout(() => {
-                        location.href = "/";
+                        // location.href = "/";
+                        document.getElementById("user_id").value = data.user_id;
+                        document.getElementById("signin_form").submit();
                     }, 2000);
                 } else {
                     showError(data.message)

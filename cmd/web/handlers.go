@@ -229,6 +229,26 @@ func (app *application) Signin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// PostSignin handles post signin request
+func (app *application) PostSignin(w http.ResponseWriter, r *http.Request) {
+	app.Session.RenewToken(r.Context())
+	err := r.ParseForm()
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	user_id := r.Form.Get("user_id")
+	app.Session.Put(r.Context(), "user_id", user_id)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+// SignOut helps to sign out an user
+func (app *application)  SignOut(w http.ResponseWriter, r *http.Request) {
+	app.Session.Destroy(r.Context())
+	app.Session.RenewToken(r.Context())
+
+	http.Redirect(w, r, "/signin", http.StatusSeeOther)
+}
+
 // PageNotFound renders 404 page not found
 func (app *application) PageNotFound(w http.ResponseWriter, r *http.Request) {
 	if err := app.renderTemplate(w, r, "page-not-found", &templateData{}); err != nil {

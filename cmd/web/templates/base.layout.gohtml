@@ -44,7 +44,7 @@
                     <li><a href="/">Home</a></li>
                     <li><a href="/buy-dates/1">Buy Once</a></li>
                     <li><a href="/plans/bronze">Bronze Plan</a></li>
-                    <li><a href="/virtual-terminal" id="vt-link" class="d-none">Virtual Terminal</a></li>
+                    <li><a href="/admin/virtual-terminal" id="vt-link" class="d-none">Virtual Terminal</a></li>
                     <li id="signin-link"><a href="/signin" class="d-none">sign in</a></li>
                 </ul>
             </div>
@@ -76,7 +76,7 @@
             function signout () {
                 localStorage.removeItem("token")
                 localStorage.removeItem("token_expiry")
-                location.href = "/signin"
+                location.href = "/signout"
             }
 
             function checkAuth() {

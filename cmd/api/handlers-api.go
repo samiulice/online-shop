@@ -241,14 +241,18 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 		app.badRequest(w, err)
 	}
 
+	//Add id to the session
+
 	var payload struct {
 		Error   bool          `json:"error"`
 		Message string        `json:"message"`
 		Token   *models.Token `json:"authentication_token"`
+		UserID int `json:"user_id"`
 	}
 	payload.Error = false
 	payload.Message = "token generated"
 	payload.Token = token
+	payload.UserID = user.ID
 
 	//send response
 	err = app.writeJSON(w, http.StatusOK, payload)

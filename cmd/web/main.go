@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/gob"
 	"flag"
 	"fmt"
@@ -14,7 +15,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/alexedwards/scs/pgxstore"
 	"github.com/alexedwards/scs/v2"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const version = "1.0.0" //app version
@@ -97,11 +100,19 @@ func main() {
 	db := dbrepo.NewDBRepo(dbConn)
 	infoLog.Println("Connected to database")
 
+	// Establish connection pool to PostgreSQL.
+	pool, err := pgxpool.New(context.Background(), "postgres://postgres:samiul@10526@localhost/online_store")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pool.Close()
+
 	//set up session
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true //change it to false if it needs to delete cookie at the closing of the browser
 	session.Cookie.Secure = false //localhost is insecure connection which is used in InProduction mode
+	session.Store = pgxstore.New(pool)
 
 	tc := make(map[string]*template.Template)
 

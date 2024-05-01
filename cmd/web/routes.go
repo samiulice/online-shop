@@ -11,9 +11,8 @@ func (app *application) routes() http.Handler {
 	mux.Use(SessionLoad)
 
 	mux.Get("/", app.Home)
-	mux.Get("/virtual-terminal", app.VirtualTerminal)
-	mux.Post("/virtual-terminal-payment-succeeded", app.VirtualTerminalPaymentSucceeded)
-	mux.Get("/virtual-terminal-receipt", app.VirtualTerminalReceipt)
+	// mux.Post("/virtual-terminal-payment-succeeded", app.VirtualTerminalPaymentSucceeded)
+	// mux.Get("/virtual-terminal-receipt", app.VirtualTerminalReceipt)
 
 	mux.Get("/buy-dates/{id}", app.BuyOnce)
 	mux.Post("/payment-succeeded", app.PaymentSucceeded)
@@ -24,15 +23,20 @@ func (app *application) routes() http.Handler {
 
 	//Auhtentication 
 	mux.Get("/signin", app.Signin)
+	mux.Post("/signin", app.PostSignin)
+	mux.Get("/signout", app.SignOut)
+	
+	//404 not found route
+	mux.NotFound(app.PageNotFound)
+
 	//Public file server
 	publicFileServer := http.FileServer(http.Dir("./public/assets"))
 	mux.Handle("/public/assets/*", http.StripPrefix("/public/assets", publicFileServer))
 
 
-	//404 not found route
-	mux.NotFound(app.PageNotFound)
-
-
-
+	mux.Route("/admin", func(mux chi.Router) {
+		mux.Use(app.Auth)
+		mux.Get("/virtual-terminal", app.VirtualTerminal)
+	})
 	return mux
 }

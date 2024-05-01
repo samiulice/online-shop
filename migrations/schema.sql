@@ -157,6 +157,19 @@ CREATE TABLE public.schema_migration (
 ALTER TABLE public.schema_migration OWNER TO postgres;
 
 --
+-- Name: sessions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.sessions (
+    token text NOT NULL,
+    data bytea NOT NULL,
+    expiry timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.sessions OWNER TO postgres;
+
+--
 -- Name: status; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -442,6 +455,14 @@ ALTER TABLE ONLY public.schema_migration
 
 
 --
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_pkey PRIMARY KEY (token);
+
+
+--
 -- Name: status status_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -486,6 +507,13 @@ ALTER TABLE ONLY public.users
 --
 
 CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USING btree (version);
+
+
+--
+-- Name: sessions_expiry_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX sessions_expiry_idx ON public.sessions USING btree (expiry);
 
 
 --
