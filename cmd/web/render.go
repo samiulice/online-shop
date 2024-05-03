@@ -40,7 +40,7 @@ func formatDate(t time.Time, format string) string {
 	return t.Format(format)
 }
 
-//go:embed templates
+//go:embed templates/*
 var templateFS embed.FS
 
 // addDefaultData adds default variables to the templatedata

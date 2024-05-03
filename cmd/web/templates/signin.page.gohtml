@@ -13,9 +13,9 @@ Sign In
         <h4 class="label">Sign In</h4>
         <div class="d-none" id="alert_area">
             <div class="alert text-center mr-3" id="alert_msg"></div>
-            <div class="d-none spinner-grow spinner-grow-sm mt-3" id="alert_spinner_first" role="status"></div>
-            <div class="d-none spinner-grow spinner-grow-sm mt-3" id="alert_spinner_second" role="status"></div>
-            <div class="d-none spinner-grow spinner-grow-sm mt-3" id="alert_spinner_third" role="status"></div>
+            <div class="spinner-grow spinner-grow-sm mt-3" id="alert_spinner_first" role="status"></div>
+            <div class="spinner-grow spinner-grow-sm mt-3" id="alert_spinner_second" role="status"></div>
+            <div class="spinner-grow spinner-grow-sm mt-3" id="alert_spinner_third" role="status"></div>
         </div>
         <div class="login-form">
             <form action="/signin" method="post" name="signin_form" id="signin_form"
@@ -36,7 +36,7 @@ Sign In
                     </span>
                     <input type="password" class="input" id="password" name="password" placeholder="Enter password"
                         autocomplete="new-password" required>
-                    <span class="input-icon-end" onclick="togglePasswordVisibility()">
+                    <span class="input-icon-end" onclick="togglePasswordVisibility('password')">
                         <img src="/public/assets/icons/eye-slash-solid.svg" alt="" title="See Password" width="20px"
                             height="20px" id="password-icon">
                     </span>
@@ -48,8 +48,16 @@ Sign In
                 </div>
             </form>
         </div>
+        <div style="color: #035cd1;"></div>
         <div class="label" style="scale: 0.8;">
-            <b>Didn't have an account? <a href="/user-registration" style="color: #fd0d2d;">Sign Up</a></b>
+            <b>Didn't have an account? <a href="/user-registration" style="color: #035cd1; text-decoration: none;" 
+                onMouseOver="this.style.color='#fd0d2d'"
+                onMouseOut="this.style.color='#035cd1'">Sign Up</a></b>
+        </div>
+        <div class="label" style="scale: 0.8;">
+            <b><a href="/forgot-password" style="color: #0566ca; text-decoration: none;" 
+                onMouseOver="this.style.color='#02375a'"
+                onMouseOut="this.style.color='#0566ca'">Forgotten password?</a></b>
         </div>
         <div class="horizontal-line"><span><b>Sign In With</b></span></div>
         <div id="logo">
@@ -81,37 +89,38 @@ Sign In
         alert_area.classList.remove('d-none');
         alert_area.classList.add('d-flex');
         
-        alert_msg.classList.add('alert')
         alert_msg.classList.add('alert-danger')
         alert_msg.classList.remove('alert-success')
         alert_msg.innerText = msg
-        alert_spinner_first.classList.remove('d-none');
-        alert_spinner_first.classList.add('text-danger');
-        
-        alert_spinner_second.classList.remove('d-none');
-        alert_spinner_second.classList.add('text-danger');
 
-        alert_spinner_third.classList.remove('d-none');
+        
+        alert_spinner_first.classList.add('text-danger');
+        alert_spinner_first.classList.remove('text-success');
+        
+
+        alert_spinner_second.classList.add('text-danger');
+        alert_spinner_second.classList.remove('text-success');
+
         alert_spinner_third.classList.add('text-danger');
+        alert_spinner_third.classList.remove('text-success');
     }
 
     function showSuccess() {
         alert_area.classList.remove('d-none');
         alert_area.classList.add('d-flex');
-        
-        alert_msg.classList.add('alert')
+
         alert_msg.classList.add('alert-success')
         alert_msg.classList.remove('alert-danger')
         alert_msg.innerText = "Signin Successful.Redirecting..."
 
-        alert_spinner_first.classList.remove('d-none');
         alert_spinner_first.classList.add('text-success');
-        
-        alert_spinner_second.classList.remove('d-none');
-        alert_spinner_second.classList.add('text-success');
+        alert_spinner_first.classList.remove('text-danger');
 
-        alert_spinner_third.classList.remove('d-none');
+        alert_spinner_second.classList.add('text-success');
+        alert_spinner_second.classList.remove('text-danger');
+
         alert_spinner_third.classList.add('text-success');
+        alert_spinner_third.classList.remove('text-danger');
 
     }
 

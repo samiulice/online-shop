@@ -2,14 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"online_store/internal/cards"
+	"online_store/internal/encryption"
 	"online_store/internal/models"
+	"online_store/internal/urlsigner"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stripe/stripe-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type stripePayload struct {
@@ -247,7 +252,7 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 		Error   bool          `json:"error"`
 		Message string        `json:"message"`
 		Token   *models.Token `json:"authentication_token"`
-		UserID int `json:"user_id"`
+		UserID  int           `json:"user_id"`
 	}
 	payload.Error = false
 	payload.Message = "token generated"
@@ -261,7 +266,7 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (app *application) CheckAuthenticated(w http.ResponseWriter, r *http.Request){
+func (app *application) CheckAuthenticated(w http.ResponseWriter, r *http.Request) {
 	//validate the token and get associated user
 	user, err := app.authenticateToken(r)
 	if err != nil {
@@ -269,9 +274,9 @@ func (app *application) CheckAuthenticated(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	//valid user 
+	//valid user
 	var payload struct {
-		Error bool `json:"error"`
+		Error   bool   `json:"error"`
 		Message string `json:"message"`
 	}
 
@@ -280,6 +285,124 @@ func (app *application) CheckAuthenticated(w http.ResponseWriter, r *http.Reques
 	app.writeJSON(w, http.StatusOK, payload)
 
 }
+
+// ForgotPassword facilitates reset password mechanism for registered user
+func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var userInput struct {
+		UserName string `json:"user_name"`
+	}
+	err := app.readJSON(w, r, &userInput)
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+	u := strings.Split(userInput.UserName, "@") //split the email to filter username
+
+	var response struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+
+	//verify the user
+	user, err := app.DB.GetUserbyUserName(u[0])
+	if err != nil {
+		response.Error = true
+		response.Message = "Username or Email doesn't match"
+		app.writeJSON(w, http.StatusAccepted, response)
+		return
+	}
+
+	//Generate signed url
+	link := fmt.Sprintf("%s/reset-password?email=%s&user_id=%v", app.config.frontend, user.Email, user.ID)
+	sign := urlsigner.Signer{
+		Secret: []byte(app.config.secretKey),
+	}
+	signedLink := sign.GenerateTokenFromString(link)
+
+	//Send Mail
+	var data struct {
+		Link string `json:"link"`
+	}
+
+	data.Link = signedLink
+
+	err = app.SendMail("info@demomailtrap.com", "coding.samiul@gmail.com", "Password reset request", "reset-password", data)
+	if err != nil {
+		app.errorLog.Println(err)
+		app.badRequest(w, err)
+		return
+	}
+
+	//Send JSON Response to the frontend after sending email successfully
+	response.Error = false
+	response.Message = "A password reset link sent to your email"
+	app.writeJSON(w, http.StatusOK, response)
+
+}
+
+// ResetPassword saves the newly entered password to the database
+func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var userInput struct {
+		ID                 string `json:"user_id"`
+		Email              string `json:"email"`
+		NewPassword        string `json:"new_password"`
+		ConfirmNewPassword string `json:"confirm_new_password"`
+	}
+
+	err := app.readJSON(w, r, &userInput)
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+
+	//Decrypt email and ID
+	decryptor := encryption.Encryption{
+		Key: []byte(app.config.secretKey),
+	}
+
+	_, err = decryptor.Decrypt(userInput.Email)
+	if err != nil {
+		app.errorLog.Println("falied to decrypt email:\t", err)
+		return
+	}
+	decryptedUserID, err := decryptor.Decrypt(userInput.ID)
+	if err != nil {
+		app.errorLog.Println("falied to decrypt userID:\t", err)
+		return
+	}
+
+	var response struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+
+	//Varifay that two password are same
+	if userInput.NewPassword != userInput.ConfirmNewPassword {
+		response.Error = true
+		response.Message = "Password mismatch"
+		app.writeJSON(w, http.StatusAccepted, response)
+		return
+	}
+
+	//update password
+	newhash, err := bcrypt.GenerateFromPassword([]byte(userInput.NewPassword), 12)
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+	err = app.DB.UpdatePasswordByUserID(decryptedUserID, string(newhash))
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+
+	//Send JSON Response to the frontend after sending email successfully
+	response.Error = false
+	response.Message = "Password updated. Redirecting..."
+	app.writeJSON(w, http.StatusOK, response)
+
+}
+
 // .........Helper functions for the handlers............//
 // SaveCustomer takes customer info as parameters, saves it to the database and returns its id
 func (app *application) SaveCustomer(c models.Customer) (int, error) {
@@ -314,7 +437,6 @@ func (app *application) SaveOrder(order models.Order) (int, error) {
 	return id, nil
 }
 
-
 func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
 	var txnData models.TransactionData
 	err := app.readJSON(w, r, &txnData)
@@ -345,19 +467,19 @@ func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r
 	txnData.BankReturnCode = pi.Charges.Data[0].ID
 	txnData.ExpiryMonth = int(pm.Card.ExpMonth)
 	txnData.ExpiryYear = int(pm.Card.ExpYear)
-//amount, currency, payment_intent, payment_method, last_four_digits,
-//  bank_return_code, transaction_status_id, expiry_month, expiry_year, created_at, updated_at)
-		
+	//amount, currency, payment_intent, payment_method, last_four_digits,
+	//  bank_return_code, transaction_status_id, expiry_month, expiry_year, created_at, updated_at)
+
 	txn := models.Transaction{
-		Amount: txnData.Amount,
-		Currency: txnData.Currency,
-		PaymentIntent: txnData.PaymentIntent,
-		PaymentMethod: txnData.PaymentMethod,
-		LastFourDigits: txnData.LastFourDigits,
-		BankReturnCode: txnData.BankReturnCode,
+		Amount:              txnData.Amount,
+		Currency:            txnData.Currency,
+		PaymentIntent:       txnData.PaymentIntent,
+		PaymentMethod:       txnData.PaymentMethod,
+		LastFourDigits:      txnData.LastFourDigits,
+		BankReturnCode:      txnData.BankReturnCode,
 		TransactionStatusID: 2,
-		ExpiryMonth: txnData.ExpiryMonth,
-		ExpiryYear: txnData.ExpiryYear,
+		ExpiryMonth:         txnData.ExpiryMonth,
+		ExpiryYear:          txnData.ExpiryYear,
 	}
 	_, err = app.SaveTransaction(txn)
 	if err != nil {

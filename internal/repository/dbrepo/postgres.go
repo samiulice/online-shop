@@ -126,7 +126,7 @@ func (m *postgresDBRepo) InsertCustomer(customer models.Customer) (int, error) {
 
 	return id, nil
 }
-
+//Database Function that relates to User Account activity
 // GetUserbyUserName gets a user by userName
 func (m *postgresDBRepo) GetUserbyUserName(userName string) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -159,7 +159,23 @@ func (m *postgresDBRepo) GetUserbyUserName(userName string) (models.User, error)
 	)
 	return u, err
 }
+// UpdatePasswordByUserID updates account password for a user
+func (m *postgresDBRepo) UpdatePasswordByUserID(id, newPassword string) (error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	stmt := `
+		UPDATE 
+			users 
+		SET 
+			password= $1
+		WHERE id= $2`
 
+	_, err := m.DB.ExecContext(ctx, stmt, newPassword, id)
+	return err
+}
+
+//Function that relates to the Token
+//InsertToken inserts token to database
 func (m *postgresDBRepo) InsertToken(t *models.Token, u models.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()

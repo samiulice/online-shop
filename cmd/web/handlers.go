@@ -1,9 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"online_store/internal/cards"
+	"online_store/internal/encryption"
 	"online_store/internal/models"
+	"online_store/internal/urlsigner"
 	"strconv"
 	"strings"
 	"time"
@@ -224,8 +227,14 @@ func (app *application) BronzePlanReceipt(w http.ResponseWriter, r *http.Request
 
 // Signin renders the Signin page for the app user
 func (app *application) Signin(w http.ResponseWriter, r *http.Request) {
-	if err := app.renderTemplate(w, r, "signin", &templateData{}); err != nil {
-		app.errorLog.Println(err)
+	if !app.Session.Exists(r.Context(), "user_id") {
+		err := app.renderTemplate(w, r, "signin", &templateData{})
+		if err != nil {
+			app.errorLog.Println(err)
+		}
+
+	} else {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
@@ -241,17 +250,91 @@ func (app *application) PostSignin(w http.ResponseWriter, r *http.Request) {
 	app.Session.Put(r.Context(), "user_id", user_id)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
 // SignOut helps to sign out an user
-func (app *application)  SignOut(w http.ResponseWriter, r *http.Request) {
+func (app *application) SignOut(w http.ResponseWriter, r *http.Request) {
 	app.Session.Destroy(r.Context())
 	app.Session.RenewToken(r.Context())
 
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 }
 
+// ForgotPassword renders forget password page for the user
+func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "forgot-password", &templateData{}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+// ResetPassword renders reset password page from signed url
+func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	//verify that url was signed
+	url := r.RequestURI
+	testURL := fmt.Sprintf("%s%s", app.config.frontend, url)
+
+	signer := urlsigner.Signer{
+		Secret: []byte(app.config.secretKey),
+	}
+	
+	//Verify and check Token expiry
+	valid := signer.VerifyToken(testURL)
+	
+
+	data := make(map[string]interface{})
+	if !valid {
+		data["msg"] = "tempered or broken"
+		if err := app.renderTemplate(w, r, "password-reset-link-invalid", &templateData{Data: data}); err != nil {
+			app.errorLog.Println(err)
+			return
+		}
+		return
+	} 
+	expired := signer.Expired(testURL, 60)
+	if expired {
+		data["msg"] = "expired"
+		if err := app.renderTemplate(w, r, "password-reset-link-invalid", &templateData{Data: data}); err != nil {
+			app.errorLog.Println(err)
+			return
+		}
+		return
+	}
+	email := r.URL.Query().Get("email")
+	userID := r.URL.Query().Get("user_id")
+
+	//encrypt email and userID
+	encryptor := encryption.Encryption{
+		Key: []byte(app.config.secretKey),
+	}
+
+	encryptedEmail, err := encryptor.Encrypt(email)
+	if err != nil {
+		app.errorLog.Println("falied to encrypt email:\t", err)
+		return
+	}
+	encryptedUserID, err := encryptor.Encrypt(userID)
+	if err != nil {
+		app.errorLog.Println("falied to encrypt userID:\t", err)
+		return
+	}
+	
+	data["email"] = encryptedEmail
+	data["user_id"] = encryptedUserID
+	
+	if err := app.renderTemplate(w, r, "reset-password", &templateData{Data: data}); err != nil {
+		app.errorLog.Println(err)
+	}
+	
+}
+
 // PageNotFound renders 404 page not found
 func (app *application) PageNotFound(w http.ResponseWriter, r *http.Request) {
 	if err := app.renderTemplate(w, r, "page-not-found", &templateData{}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+// Test renders pages for testing purposes
+func (app *application) Test(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "test-html", &templateData{}); err != nil {
 		app.errorLog.Println(err)
 	}
 }

@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"online_store/internal/driver"
 	"online_store/internal/repository"
 	"online_store/internal/repository/dbrepo"
-	"net/http"
 	"os"
 	"time"
 )
@@ -23,8 +23,17 @@ type config struct {
 	}
 	stripe struct {
 		secret string //secret key for privacy purpose
-		key string //Publishable key
+		key    string //Publishable key
 	}
+
+	smtp struct { //SMTP credentials
+		host     string
+		port     int
+		username string
+		password string
+	}
+	secretKey string
+	frontend  string
 }
 
 // application is the receiver for the various parts of the application
@@ -33,7 +42,7 @@ type application struct {
 	infoLog  *log.Logger
 	errorLog *log.Logger
 	version  string
-	DB repository.DatabaseRepo
+	DB       repository.DatabaseRepo
 }
 
 func (app *application) serve() error {
@@ -59,6 +68,12 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4001, "API Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application Environment{development|production}")
 	flag.StringVar(&cfg.db.dsn, "dsn", "host=localhost port=5432 dbname=online_store user=postgres password=samiul@10526 sslmode=disable", "DSN")
+	flag.StringVar(&cfg.smtp.host, "smtphost", "live.smtp.mailtrap.io", "smtp host")
+	flag.IntVar(&cfg.smtp.port, "smtpport", 2525, "smtp Server port to listen on")
+	flag.StringVar(&cfg.smtp.username, "smtpusername", "api", "smtp username")
+	flag.StringVar(&cfg.smtp.password, "smtppassword", "6bf8fcf8a87e4b6cbb6e1cf1a8d0b4a3", "smtp password")
+	flag.StringVar(&cfg.secretKey, "secretkey", "Oanlsm1SeiEti25SL1iuVSunr06LOmeo", "secret key")
+	flag.StringVar(&cfg.frontend, "frontend", "http://localhost:4000", "frontend url")
 
 	flag.Parse()
 
@@ -69,7 +84,7 @@ func main() {
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	//Connection to database
-	dbConn , err := driver.ConnectDB(cfg.db.dsn)
+	dbConn, err := driver.ConnectDB(cfg.db.dsn)
 	if err != nil {
 		errorLog.Fatal(err)
 		return
@@ -78,13 +93,12 @@ func main() {
 	db := dbrepo.NewDBRepo(dbConn)
 	infoLog.Println("Connected to database")
 
-
 	app := &application{
 		config:   cfg,
 		infoLog:  infoLog,
 		errorLog: errorLog,
 		version:  version,
-		DB: db,
+		DB:       db,
 	}
 
 	err = app.serve()

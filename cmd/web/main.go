@@ -37,6 +37,8 @@ type config struct {
 		secret string //secret key for privacy purpose
 		key    string //Publishable key
 	}
+	secretKey string
+	frontend  string
 }
 
 // application is the receiver for the various parts of the application
@@ -80,6 +82,8 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Application Environment{development|production}")
 	flag.StringVar(&cfg.api, "api", "http://localhost:4001", "URL to api")
 	flag.StringVar(&cfg.db.dsn, "dsn", "host=localhost port=5432 dbname=online_store user=postgres password=samiul@10526 sslmode=disable", "DSN")
+	flag.StringVar(&cfg.secretKey, "secretkey", "Oanlsm1SeiEti25SL1iuVSunr06LOmeo", "secret key")
+	flag.StringVar(&cfg.frontend, "frontend", "http://localhost:4000", "frontend url")
 
 	flag.Parse()
 
