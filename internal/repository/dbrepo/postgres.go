@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"online_store/internal/models"
-	"strings"
 	"time"
 )
 
@@ -126,25 +125,23 @@ func (m *postgresDBRepo) InsertCustomer(customer models.Customer) (int, error) {
 
 	return id, nil
 }
-//Database Function that relates to User Account activity
+
+// Database Function that relates to User Account activity
 // GetUserbyUserName gets a user by userName
-func (m *postgresDBRepo) GetUserbyUserName(userName string) (models.User, error) {
+func (m *postgresDBRepo) GetUserDetails(index, paramType string) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	userName = strings.ToLower(userName)
-
-	index := "user_name"
-	if strings.Contains(userName, "@") {
-		index = "email"
-	}
+	//paramType : ID >>> id
+	//paramType : username >>> user_name
+	//paramType : (contains @) >>> email
 	var u models.User
 
 	query := `
 		SELECT id, user_name, first_name, last_name, email, password, coalesce(image_link, ''), created_at, updated_at
 		FROM users
-		WHERE ` + index + ` = $1`
-	row := m.DB.QueryRowContext(ctx, query, userName)
+		WHERE ` + paramType + ` = $1`
+	row := m.DB.QueryRowContext(ctx, query, index)
 
 	err := row.Scan(
 		&u.ID,
@@ -159,8 +156,9 @@ func (m *postgresDBRepo) GetUserbyUserName(userName string) (models.User, error)
 	)
 	return u, err
 }
+
 // UpdatePasswordByUserID updates account password for a user
-func (m *postgresDBRepo) UpdatePasswordByUserID(id, newPassword string) (error) {
+func (m *postgresDBRepo) UpdatePasswordByUserID(id, newPassword string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	stmt := `
@@ -174,8 +172,8 @@ func (m *postgresDBRepo) UpdatePasswordByUserID(id, newPassword string) (error) 
 	return err
 }
 
-//Function that relates to the Token
-//InsertToken inserts token to database
+// Function that relates to the Token
+// InsertToken inserts token to database
 func (m *postgresDBRepo) InsertToken(t *models.Token, u models.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()

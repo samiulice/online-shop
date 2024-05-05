@@ -72,6 +72,7 @@ func (app *application) serve() error {
 func main() {
 	//Register the types of sessional variable
 	gob.Register(models.TransactionData{})
+	gob.Register(models.User{})
 
 	//app config
 	var cfg config
@@ -82,7 +83,7 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Application Environment{development|production}")
 	flag.StringVar(&cfg.api, "api", "http://localhost:4001", "URL to api")
 	flag.StringVar(&cfg.db.dsn, "dsn", "host=localhost port=5432 dbname=online_store user=postgres password=samiul@10526 sslmode=disable", "DSN")
-	flag.StringVar(&cfg.secretKey, "secretkey", "Oanlsm1SeiEti25SL1iuVSunr06LOmeo", "secret key")
+	flag.StringVar(&cfg.secretKey, "secretkey", "Oanlsm1SeiEti25SL1iuVSunr06LOmeo", "secret key of length 32chars") //
 	flag.StringVar(&cfg.frontend, "frontend", "http://localhost:4000", "frontend url")
 
 	flag.Parse()

@@ -10,7 +10,7 @@ type DatabaseRepo interface {
 	InsertCustomer(customer models.Customer) (int, error)
 
 	//User
-	GetUserbyUserName(userName string) (models.User, error)
+	GetUserDetails(index, paramType string) (models.User, error)
 	UpdatePasswordByUserID(id, newPassword string) (error)
 
 	//Token

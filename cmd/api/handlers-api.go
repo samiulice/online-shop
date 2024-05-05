@@ -9,7 +9,6 @@ import (
 	"online_store/internal/models"
 	"online_store/internal/urlsigner"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -221,7 +220,7 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 	}
 
 	//get the user from the database by username; send error if invalid username
-	user, err := app.DB.GetUserbyUserName(userInput.UserName)
+	user, err := app.DB.GetUserDetails(userInput.UserName, "user_name")
 	if err != nil {
 		app.invalidCradentials(w)
 		return
@@ -296,7 +295,6 @@ func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		app.badRequest(w, err)
 		return
 	}
-	u := strings.Split(userInput.UserName, "@") //split the email to filter username
 
 	var response struct {
 		Error   bool   `json:"error"`
@@ -304,7 +302,7 @@ func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//verify the user
-	user, err := app.DB.GetUserbyUserName(u[0])
+	user, err := app.DB.GetUserDetails(userInput.UserName, "user_name")
 	if err != nil {
 		response.Error = true
 		response.Message = "Username or Email doesn't match"

@@ -20,7 +20,7 @@ func (app *application) Home(w http.ResponseWriter, r *http.Request) {
 
 // VirtualTerminal handles the virtual termainal page for charge card
 func (app *application) VirtualTerminal(w http.ResponseWriter, r *http.Request) {
-	if err := app.renderTemplate(w, r, "terminal", &templateData{}); err != nil {
+	if err := app.renderTemplate(w, r, "admin-virtual-terminal", &templateData{}); err != nil {
 		app.errorLog.Println(err)
 	}
 }
@@ -227,14 +227,13 @@ func (app *application) BronzePlanReceipt(w http.ResponseWriter, r *http.Request
 
 // Signin renders the Signin page for the app user
 func (app *application) Signin(w http.ResponseWriter, r *http.Request) {
-	if !app.Session.Exists(r.Context(), "user_id") {
+	if app.Session.Exists(r.Context(), "user_id") {
+		http.Redirect(w, r, "/admin/dashboard", http.StatusSeeOther)
+	} else {
 		err := app.renderTemplate(w, r, "signin", &templateData{})
 		if err != nil {
 			app.errorLog.Println(err)
 		}
-
-	} else {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
@@ -247,8 +246,14 @@ func (app *application) PostSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user_id := r.Form.Get("user_id")
+	user, err := app.DB.GetUserDetails(user_id, "id")
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
 	app.Session.Put(r.Context(), "user_id", user_id)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	app.Session.Put(r.Context(), "user", user)
+	http.Redirect(w, r, "/admin/dashboard", http.StatusSeeOther)
 }
 
 // SignOut helps to sign out an user
@@ -265,6 +270,7 @@ func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Println(err)
 	}
 }
+
 // ResetPassword renders reset password page from signed url
 func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	//verify that url was signed
@@ -274,10 +280,9 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	signer := urlsigner.Signer{
 		Secret: []byte(app.config.secretKey),
 	}
-	
+
 	//Verify and check Token expiry
 	valid := signer.VerifyToken(testURL)
-	
 
 	data := make(map[string]interface{})
 	if !valid {
@@ -287,7 +292,7 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		return
-	} 
+	}
 	expired := signer.Expired(testURL, 60)
 	if expired {
 		data["msg"] = "expired"
@@ -315,14 +320,14 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Println("falied to encrypt userID:\t", err)
 		return
 	}
-	
+
 	data["email"] = encryptedEmail
 	data["user_id"] = encryptedUserID
-	
+
 	if err := app.renderTemplate(w, r, "reset-password", &templateData{Data: data}); err != nil {
 		app.errorLog.Println(err)
 	}
-	
+
 }
 
 // PageNotFound renders 404 page not found
@@ -335,6 +340,15 @@ func (app *application) PageNotFound(w http.ResponseWriter, r *http.Request) {
 // Test renders pages for testing purposes
 func (app *application) Test(w http.ResponseWriter, r *http.Request) {
 	if err := app.renderTemplate(w, r, "test-html", &templateData{}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+// .........Handler function for admin panel............//
+// AdminDashboard renders admin dashboard
+func (app *application) AdminDashboard(w http.ResponseWriter, r *http.Request) {
+	user := app.Session.Get(r.Context(), "user").(models.User)
+	if err := app.renderTemplate(w, r, "admin-dashboard", &templateData{User: user}); err != nil {
 		app.errorLog.Println(err)
 	}
 }

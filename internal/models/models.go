@@ -110,7 +110,7 @@ type User struct {
 	LastName  string    `json:"last_name"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
-	ImageLink string    `json:"image_link"`
+	ImageLink string    `json:"image_link"` //username_profile_id_yy-mm-dd_hh-mm-ss.jpf
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"online_store/internal/models"
 	"strings"
 	"time"
 )
@@ -18,14 +19,15 @@ type templateData struct {
 	Flash                string
 	Warning              string
 	Error                string
-	IsAuthenticated      string
+	IsAuthenticated      int
 	API                  string
 	CSSVersion           string
 	StripeSecretKey      string
 	StripePublishableKey string
+	User                 models.User
 }
 
-var functions = template.FuncMap{
+var funcMap = template.FuncMap{
 	"formatCurrency": formatCurrency,
 	"formatDate":     formatDate,
 }
@@ -48,8 +50,15 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
 	td.API = app.config.api
 	td.StripePublishableKey = app.config.stripe.key
 	td.StripeSecretKey = app.config.stripe.secret
+	if app.Session.Exists(r.Context(), "user_id") {
+		td.IsAuthenticated = 1
+		td.User = app.Session.Get(r.Context(), "user").(models.User)
+	} else {
+		td.IsAuthenticated = 0
+	}
 	return td
 }
+
 func (app *application) renderTemplate(w http.ResponseWriter, r *http.Request, page string, td *templateData, partials ...string) error {
 	var t *template.Template
 	var err error
@@ -58,10 +67,10 @@ func (app *application) renderTemplate(w http.ResponseWriter, r *http.Request, p
 
 	_, templateInMap := app.temlateCache[templateToRender]
 
-	if app.config.env == "production" && templateInMap {
+	if templateInMap {
 		t = app.temlateCache[templateToRender]
 	} else {
-		t, err = app.parseTemplate(partials, page, templateToRender)
+		t, err = app.parseTemplate(partials, page)
 		if err != nil {
 			app.errorLog.Println(err)
 			return nil
@@ -82,9 +91,20 @@ func (app *application) renderTemplate(w http.ResponseWriter, r *http.Request, p
 	return nil
 }
 
-func (app *application) parseTemplate(partials []string, page string, templateToRender string) (*template.Template, error) {
+func (app *application) parseTemplate(partials []string, page string) (*template.Template, error) {
 	var t *template.Template
 	var err error
+
+	//Identifying Base Template path
+	var baseTemplate string
+	if strings.Contains(page, "admin") {
+		baseTemplate = "templates/admin.layout.gohtml"
+	} else {
+		baseTemplate = "templates/base.layout.gohtml"
+	}
+
+	//Identifying Template path that needs to be rendered
+	templateToRender := fmt.Sprintf("templates/%s.page.gohtml", page)
 
 	//build partials
 	if len(partials) > 0 {
@@ -93,14 +113,14 @@ func (app *application) parseTemplate(partials []string, page string, templateTo
 		}
 	}
 
-	if len(partials) > 0 {
-		t, err = template.New(fmt.Sprintf("%s.page.gohtml", page)).Funcs(functions).ParseFS(templateFS, "templates/base.layout.gohtml", strings.Join(partials, ","), templateToRender)
-	} else {
-		t, err = template.New(fmt.Sprintf("%s.page.gohtml", page)).Funcs(functions).ParseFS(templateFS, "templates/base.layout.gohtml", templateToRender)
-	}
+	//patterns of Templates path that is to be parsed into the single template
+	var templates []string
+	templates = append(templates, baseTemplate, templateToRender)
+	templates = append(templates, partials...)
+
+	t, err = template.New(fmt.Sprintf("%s.page.gohtml", page)).Funcs(funcMap).ParseFS(templateFS, templates...)
 
 	if err != nil {
-		app.errorLog.Println(err)
 		return nil, err
 	}
 
