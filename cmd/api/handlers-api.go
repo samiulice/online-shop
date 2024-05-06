@@ -9,6 +9,7 @@ import (
 	"online_store/internal/models"
 	"online_store/internal/urlsigner"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -485,4 +486,17 @@ func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r
 		return
 	}
 	app.writeJSON(w, http.StatusOK, txn)
+}
+
+// AdminSalesHistoy return list of all sales to the corresponded category in JSON format
+func (app *application) AdminSalesHistoy(w http.ResponseWriter, r *http.Request) {
+
+	statusType := strings.Split(r.RequestURI, "/")[5]
+	Sales, err := app.DB.GetOrdersHistory(statusType)
+	if err != nil {
+		app.errorLog.Println(err)
+		app.badRequest(w, err)
+		return
+	}
+	app.writeJSON(w, http.StatusOK, Sales)
 }

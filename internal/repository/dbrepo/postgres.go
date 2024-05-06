@@ -3,6 +3,8 @@ package dbrepo
 import (
 	"context"
 	"crypto/sha256"
+	"database/sql"
+	"errors"
 	"online_store/internal/models"
 	"time"
 )
@@ -126,7 +128,106 @@ func (m *postgresDBRepo) InsertCustomer(customer models.Customer) (int, error) {
 	return id, nil
 }
 
-// Database Function that relates to User Account activity
+// Database Functions that is related to Order processing activity
+// GetOrdersHistory returns a slice of all orders with associated customer and transaction info.
+//if statusType == all, it will return list all orders
+//if statusType == completed, it will return list of completed orders
+//if statusType == refunded, it will return list of refunded orders
+//if statusType == cancelled, it will return list of cancelled orders
+
+func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var orders []*models.Order
+
+	query := `
+		SELECT 
+			o.id, o.dates_id, o.transaction_id, o.customer_id, o.status_id,
+			o.quantity, o.amount, o.created_at, o.updated_at, 
+			d.id, d.name, t.id, t.amount, t.currency, t.last_four_digits,
+			t.expiry_month, t.expiry_year, t.payment_intent,
+			t.bank_return_code, c.id, c.first_name, c.last_name, c.email, c.image_link
+		FROM
+			orders o
+			LEFT JOIN dates d on (o.dates_id = d.id)
+			LEFT JOIN transactions t on (o.transaction_id = t.id)
+			LEFT JOIN customers c on (o.customer_id = c.id)
+		`
+
+	trails := `
+		 ORDER BY
+			o.created_at desc`
+
+	var rows *sql.Rows
+	var err error
+
+	if statusType == "all" {
+		query = query + trails
+		rows, err = m.DB.QueryContext(ctx, query)
+	} else if statusType == "completed" {
+		query = query + ` WHERE o.status_id = 1` + trails
+		rows, err = m.DB.QueryContext(ctx, query)
+	} else if statusType == "refunded" {
+		query = query + ` WHERE o.status_id = 2` + trails
+		rows, err = m.DB.QueryContext(ctx, query)
+	} else if statusType == "cancelled" {
+		query = query + ` WHERE o.status_id = 3` + trails
+		rows, err = m.DB.QueryContext(ctx, query)
+	} else if statusType == "one-off" {
+		query = query + ` WHERE d.is_recurring = 0` + trails
+		rows, err = m.DB.QueryContext(ctx, query)
+	} else if statusType == "subscriptions" {
+		query = query + ` WHERE d.is_recurring = 1` + trails
+		rows, err = m.DB.QueryContext(ctx, query)
+	} else {
+		return orders, errors.New("invalid function parameter for the database function call")
+	}
+
+	if err != nil {
+		return orders, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var o models.Order
+		err = rows.Scan(
+			&o.ID,
+			&o.DatesID,
+			&o.TransactionID,
+			&o.CustomerID,
+			&o.StatusID,
+			&o.Quantity,
+			&o.Amount,
+			&o.CreatedAt,
+			&o.UpdatedAt,
+			&o.Dates.ID,
+			&o.Dates.Name,
+			&o.Transaction.ID,
+			&o.Transaction.Amount,
+			&o.Transaction.Currency,
+			&o.Transaction.LastFourDigits,
+			&o.Transaction.ExpiryMonth,
+			&o.Transaction.ExpiryYear,
+			&o.Transaction.PaymentIntent,
+			&o.Transaction.BankReturnCode,
+			&o.Customer.ID,
+			&o.Customer.FirstName,
+			&o.Customer.LastName,
+			&o.Customer.Email,
+			&o.Customer.ImageLink,
+		)
+		if err != nil {
+			return orders, err
+		}
+		orders = append(orders, &o)
+	}
+
+	// return orders, errors.New("testing errors")
+	return orders, nil
+}
+
+// Database Functions that relates to User Account activity
 // GetUserbyUserName gets a user by userName
 func (m *postgresDBRepo) GetUserDetails(index, paramType string) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

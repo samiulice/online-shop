@@ -42,15 +42,18 @@ type Date struct {
 
 // Order is the type for all orders
 type Order struct {
-	ID            int       `json:"id"`
-	DatesID       int       `json:"dates_id"`
-	TransactionID int       `json:"transaction_id"`
-	CustomerID    int       `json:"customer_id"`
-	StatusID      int       `json:"status_id"`
-	Quantity      int       `json:"quantity"`
-	Amount        int       `json:"amount"`
-	CreatedAt     time.Time `json:"-"`
-	UpdatedAt     time.Time `json:"-"`
+	ID            int         `json:"id"`
+	DatesID       int         `json:"dates_id"`
+	TransactionID int         `json:"transaction_id"`
+	CustomerID    int         `json:"customer_id"`
+	StatusID      int         `json:"status_id"`
+	Quantity      int         `json:"quantity"`
+	Amount        int         `json:"amount"`
+	CreatedAt     time.Time   `json:"-"`
+	UpdatedAt     time.Time   `json:"-"`
+	Dates         Date        `json:"dates"`
+	Transaction   Transaction `json:"transaction"`
+	Customer      Customer    `json:"customer"`
 }
 
 // Status is the type for all order status
@@ -121,6 +124,8 @@ type Customer struct {
 	FirstName string    `json:"first_name"`
 	LastName  string    `json:"last_name"`
 	Email     string    `json:"email"`
+	ImageLink string    `json:"image_link"` //username_profile_id_yy-mm-dd_hh-mm-ss.jpf
+	AccountStatus int `json:"account_status"` //0 = deleted, 1 = active, 2 = deactivated 
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
 }

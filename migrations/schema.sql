@@ -29,6 +29,8 @@ CREATE TABLE public.customers (
     first_name character varying(255) DEFAULT ''::character varying NOT NULL,
     last_name character varying(255) DEFAULT ''::character varying NOT NULL,
     email character varying(255) DEFAULT ''::character varying NOT NULL,
+    image_link character varying(255) DEFAULT ''::character varying NOT NULL,
+    account_status integer DEFAULT 1 NOT NULL,
     created_at date NOT NULL,
     updated_at date NOT NULL
 );

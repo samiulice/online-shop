@@ -1,0 +1,182 @@
+
+
+{{template "admin" .}}
+
+{{define "title"}}
+{{$val := index .Data "history-type"}}
+  {{if eq $val "all"}}
+    All Sales
+  {{else if eq $val "one-off"}}
+    One-off Sales
+    {{else if eq $val "subscripions"}}
+    Subscriptions
+  {{else}}
+    {{titleCase $val}}
+  {{end}}
+
+{{end}}
+
+{{define "content"}}
+{{$val := index .Data "history-type"}}
+<div class="row">
+  <div class="col-md-12">
+    <div class="x_panel">
+      <div class="x_title">
+        <h3 class="text-center">
+          {{if eq $val "all"}}
+            All Sales
+          {{else if eq $val "one-off"}}
+            One-off Sales
+          {{else if eq $val "subscripions"}}
+            Subscriptions
+          {{else}}
+            {{titleCase $val}}
+          {{end}}
+
+        </h3>
+        <ul class="nav navbar-right panel_toolbox">
+          <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+          </li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i
+                class="fa fa-wrench"></i></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="#">Settings 1</a>
+              </li>
+              <li><a href="#">Settings 2</a>
+              </li>
+            </ul>
+          </li>
+          <li><a class="close-link"><i class="fa fa-close"></i></a>
+          </li>
+        </ul>
+        <div class="clearfix"></div>
+      </div>
+      <div class="x_content">
+
+        <!-- start project list -->
+        <table id="sales-table" class="table table-striped projects">
+          <thead>
+            <tr>
+              <th >Transaction</th>
+              <th>Customer</th>
+              <th>Product</th>
+              
+              {{if eq $val "subscriptions"}}
+              <th>Amount/month</th>
+              {{else}}
+              <th>Amount</th>
+              {{end}}
+              <th id="row-actions" style="color:rgb(150, 147, 3); width: 30%">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- tbody is deployed by javascript -->
+          </tbody>
+        </table>
+        <!-- end project list -->
+
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}
+
+{{define "js"}}
+{{$val := index .Data "history-type"}}
+<script>
+  let token = localStorage.getItem("token")
+  let tbody = document.getElementById("sales-table").getElementsByTagName("tbody")[0];
+
+  const requestOptions = {
+    method: 'post',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+    },
+  }
+
+  fetch('{{.API}}/api/admin/analytics/sales-history/{{$val}}', requestOptions)
+    .then(response => response.json())
+    .then(function (data) {
+      if (data){
+        if (Object.keys(data)[0] === "error"){
+          console.log("Internal Server Error")
+          let newRow = tbody.insertRow();
+          let newCell = newRow.insertCell();
+
+          document.getElementById("row-actions").classList.add("d-none");
+          newRow.classList.add("text-center");
+
+          newCell = newRow.insertCell();
+          newCell.setAttribute('colspan', 5);
+          newCell.innerHTML = '<b style="color:rgb(255, 0, 76); width: 30%">Internal Server Error</b>';
+          return;
+        }
+        data.forEach(function (i) {
+          let newRow = tbody.insertRow();
+          let newCell = newRow.insertCell();
+          newCell.innerHTML = `<a href="/admin/analytics/sales/${i.id}">Order: ${i.id}</a>`;
+
+          newCell = newRow.insertCell();
+          if (i.customer.image_link === "") {
+            newCell.innerHTML = `<a href="/admin/profile/customer/${i.customer.id}">
+                                    <b>${i.customer.first_name}&nbsp;${i.customer.last_name}</b>
+                                </a>`
+          } else {
+            newCell.innerHTML = `<a href="/admin/profile/customer/${i.customer.id}">
+                                    <img style="border: 2px solid #850108; 
+                                    border-radius: 100%;" src="/admin/images/${i.customer.image_link}" 
+                                    class="avatar" alt="Profile Picture">
+                                </a>`
+          }
+
+          newCell = newRow.insertCell();
+          newCell.innerHTML = `<a href="/admin/products/${i.dates.id}"><b>${i.dates.name}</b></a>`;
+
+          let curr = formatCurrency(i.transaction.amount, i.transaction.currency)
+          newCell = newRow.insertCell();
+          item = document.createTextNode(curr);
+          newCell.appendChild(item);
+
+          newCell = newRow.insertCell();
+          newCell.innerHTML = `
+              <a href="/admin/orders/view/${i.id}" class="btn btn-primary btn-xs"><i class="fa fa-folder"></i> View </a>
+              <a href="/admin/orders/edit/${i.id}" class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> Edit </a>
+              <a href="/admin/orders/delete/${i.id}" class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete </a>`;
+
+        })
+
+        
+      } else {
+        console.log("no data")
+        let newRow = tbody.insertRow();
+        let newCell = newRow.insertCell();
+
+        document.getElementById("row-actions").classList.add("d-none");
+        newRow.classList.add("text-center");
+
+        newCell = newRow.insertCell();
+        newCell.setAttribute('colspan', 5);
+        newCell.innerHTML = "<b>No data available</b>";
+      }
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
+
+    function formatCurrency(amount, currency) {
+      // Convert cents to taka
+      let t = parseFloat(amount / 100);
+      let c = currency.toUpperCase()
+
+      // Format the currency using toLocaleString method
+      return t.toLocaleString("en-"+c.substring(0, 2), {
+        style: "currency",
+        currency: c,
+      });
+    }
+
+</script>
+{{end}}

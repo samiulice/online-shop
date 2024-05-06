@@ -28,8 +28,17 @@ type templateData struct {
 }
 
 var funcMap = template.FuncMap{
+	"titleCase":      titleCase,
 	"formatCurrency": formatCurrency,
 	"formatDate":     formatDate,
+}
+
+// titleCase returns a copy of the string s with all Unicode letters mapped to their Unicode title case
+func titleCase(s string) string {
+	if len(strings.Split(s, " ")) < 2 {
+		return strings.ToUpper(string(s[0])) + s[1:]
+	}
+	return strings.ToTitle(s)
 }
 
 // formatCurrency returns the currency with prefix $
@@ -67,7 +76,7 @@ func (app *application) renderTemplate(w http.ResponseWriter, r *http.Request, p
 
 	_, templateInMap := app.temlateCache[templateToRender]
 
-	if templateInMap {
+	if templateInMap && app.config.env != "development" {
 		t = app.temlateCache[templateToRender]
 	} else {
 		t, err = app.parseTemplate(partials, page)

@@ -189,7 +189,9 @@ a:hover {
 }
 
 .left_col {
-    background: rgb(16, 23, 31)
+    background: rgb(16, 23, 31);
+    position: sticky;
+    overflow-y: auto;
 }
 
 .nav-sm .container.body .col-md-3.left_col {
@@ -1097,7 +1099,7 @@ a:visited {
 
 footer {
     background: #fff;
-    padding: 15px 20px;
+    padding: 10px;
     display: block
 }
 
@@ -1986,7 +1988,7 @@ span.right {
     display: block;
     padding: 5px 0 0;
     position: fixed;
-    width: 230px;
+    width: 210px;
     background: var(--bg_color);
     z-index: 999
 }
@@ -2004,7 +2006,7 @@ span.right {
 }
 
 .sidebar-footer a:hover {
-    background: #c9ffda
+    background: #eeeceb 
 }
 
 .tile_count {

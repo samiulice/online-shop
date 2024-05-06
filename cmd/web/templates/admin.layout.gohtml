@@ -30,7 +30,6 @@
 
     <!-- Custom Theme Style -->
     <link href="/admin/build/css/custom.min.css" rel="stylesheet">
-
     <!-- Custom CSS -->
     {{block "css" .}}{{end}}
     <!-- /Custom CSS -->
@@ -67,24 +66,75 @@
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
-                  <li><a><i class="fa fa-bar-chart-o"></i> Statistics <span class="fa fa-chevron-down"></span></a>
+                  <li><a href="#/admin/dashboard"><i class="fa fa-shield"></i> Admin <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="/admin/dashboard">Dashboard</a></li>
-                      <li><a href="/admin/statistics/view-stock">View Stock</a></li>
+                      <li><a href="#/admin/dashboard/profile/view-profile-info">Profile</a></li>
+                      <li><a href="#/admin/dashboard/profile/view-task">Task</a></li>
                     </ul>
                   </li>
+                  <li><a><i class="fa fa-group"></i> Service Provider <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="#/admin/employees/active">Active employees</a></li>
+                      <li><a href="#/admin/employees/ex">Ex-employees</a></li>
+                      <li><a href="#/admin/employees/suspended">Suspended</a></li>
+                      <li><a href="#/admin/employees/resigned">Resigned</a></li>
+                      <li><a href="#/admin/employees/all">All List</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-database"></i> Stock Controller <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="#/admin/stocks/add">Add To Stocks</a></li>
+                      <li><a href="#/admin/stocks/view-stock">View Stock</a></li>
+                    </ul>
+                  </li>
+                  <!-- <li><a><i class="fa fa-bar-chart-o"></i> Stock Controller <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="/admin/dashboard">Add To Stocks</a></li>
+                      <li><a href="/admin/analytics/view-stock">View Stock</a></li>
+                    </ul>
+                  </li> -->
+                </ul>
+              </div>
+              <div class="menu_section">
+                <h3>Analytics</h3>
+                <ul class="nav side-menu">
                   <li><a><i class="fa fa-history"></i> Sales History <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="/admin/statistics/new-sales">New Sales</a></li>
-                      <li><a href="/admin/statistics/new-sales">All Sales</a></li>
+                      <li><a href="/admin/analytics/sales-history/all">All Sales</a></li>
+                      <li><a href="/admin/analytics/sales-history/completed">Completed</a></li>
+                      <li><a href="/admin/analytics/sales-history/refunded">Refunded</a></li>
+                      <li><a href="/admin/analytics/sales-history/cancelled">Cancelled</a></li>
                     </ul>
                   </li>
-                  <li><a><i class="fa fa-bank"></i> Payments <span class="fa fa-chevron-down"></span></a>
+                  <li><a><i class="fa fa-history"></i> Sales Catagory <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
-                      <li><a href="/admin/statistics/vt-payments">Virtual Terminal Payments</a></li>
-                      <li><a href="/admin/statistics/customer-payments">Customer Payments</a></li>
-                      <li><a href="/admin/statistics/signle-payments">One Time Payments</a></li>
-                      <li><a href="/admin/statistics/subscriptions">Subscriptions</a></li>
+                      <li><a href="/admin/analytics/sales-history/one-off">One-off purchase</a></li>
+                      <li><a href="/admin/analytics/sales-history/subscriptions">Subscriptions</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-bank"></i> Payment History <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="#/admin/analytics/payments/all">All Payments</a></li>
+                      <li><a href="#/admin/analytics/payments/vt">Virtual Terminal Payments</a></li>
+                      <li><a href="#/admin/analytics/payments/customer">Customer Payments</a></li> 
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+              <div class="menu_section">
+                <h3>Customer Managment</h3>
+                <ul class="nav side-menu">
+                  <li><a><i class="fa fa-history"></i> View Profile <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="/admin/customer/profile/view/0">All Profile</a></li>
+                      <li><a href="/admin/customer/profile/view/00">Deleted Profile</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-bank"></i> FAQ <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="#/admin/analytics/payments/all">Unresolved</a></li>
+                      <li><a href="#/admin/analytics/payments/vt">Resolved</a></li>
+                      <li><a href="#/admin/analytics/payments/customer">Default Queries</a></li> 
                     </ul>
                   </li>
                 </ul>
@@ -98,6 +148,11 @@
                     </ul>
                   </li>
                   <li><a><i class="fa fa-bug"></i> Additional Pages <span class="fa fa-chevron-down"></span></a>
+                    <ul class="nav child_menu">
+                      <li><a href="/"><i class="fa fa-glob"></i>Frontend</a></li>
+                    </ul>
+                  </li>
+                  <li><a><i class="fa fa-bug"></i> Pages <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       <li><a href="/"><i class="fa fa-glob"></i>Frontend</a></li>
                     </ul>
@@ -116,8 +171,8 @@
               <a data-toggle="tooltip" data-placement="top" title="FullScreen">
                 <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
               </a>
-              <a data-toggle="tooltip" data-placement="top" title="Lock">
-                <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
+              <a href="/" data-toggle="tooltip" data-placement="top" title="Lock">
+                <span class="glyphicon glyphicon-globe" aria-hidden="true"></span>
               </a>
               <a data-toggle="tooltip" data-placement="top" title="Logout" href="/signout">
                 <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
@@ -150,7 +205,7 @@
                       </a>
                     </li>
                     <li><a href="javascript:;">Help</a></li>
-                    <li><a href="login.html"><i class="fa fa-sign-out pull-right"></i> Log Out</a></li>
+                    <li><a href="/signout"><i class="fa fa-sign-out pull-right"></i> Log Out</a></li>
                   </ul>
                 </li>
 

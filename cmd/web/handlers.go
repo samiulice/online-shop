@@ -7,6 +7,7 @@ import (
 	"online_store/internal/encryption"
 	"online_store/internal/models"
 	"online_store/internal/urlsigner"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -344,11 +345,47 @@ func (app *application) Test(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// .........Handler function for admin panel............//
+// .........Handler function for Admin Panel............//
 // AdminDashboard renders admin dashboard
 func (app *application) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 	user := app.Session.Get(r.Context(), "user").(models.User)
 	if err := app.renderTemplate(w, r, "admin-dashboard", &templateData{User: user}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+// AdminSalesHistoy renders various sales history
+func (app *application) AdminSalesHistoy(w http.ResponseWriter, r *http.Request) {
+
+	data := make(map[string]interface{})
+	data["history-type"] = path.Base(r.URL.Path)
+
+
+	user := app.Session.Get(r.Context(), "user").(models.User)
+	if err := app.renderTemplate(w, r, "admin-orders-history", &templateData{
+		User: user,
+		Data: data,
+		}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+// .........Handler function for Customer Management............//
+
+// AdminViewCustomerProfile renders list of customers or a single customer profile. 
+//All customer accounts are listed, if last element of path is "0". All deleted customer accounts are listed if last element of path is "00" 
+// and shows a customer profile details otherwise
+func (app *application) AdminViewCustomerProfile(w http.ResponseWriter, r *http.Request){
+	id := path.Base(r.URL.Path)
+	tmpl := "admin-view-customer-profile"
+	if id == "0" || id == "00"{
+		tmpl = tmpl + "-list"
+	} else {
+		tmpl = tmpl + "-" + id
+	}
+	
+	user := app.Session.Get(r.Context(), "user").(models.User)
+	if err := app.renderTemplate(w, r, tmpl, &templateData{User: user}); err != nil {
 		app.errorLog.Println(err)
 	}
 }
