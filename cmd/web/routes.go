@@ -41,17 +41,16 @@ func (app *application) routes() http.Handler {
 		mux.Use(app.Auth)
 		mux.Get("/virtual-terminal", app.VirtualTerminal)
 		mux.Get("/dashboard", app.AdminDashboard)
-		
-		//routes for business analytics >> sales-histoy
-		mux.Get("/analytics/sales-history/completed", app.AdminSalesHistoy)
-		mux.Get("/analytics/sales-history/refunded", app.AdminSalesHistoy)
-		mux.Get("/analytics/sales-history/cancelled", app.AdminSalesHistoy)
-		mux.Get("/analytics/sales-history/all", app.AdminSalesHistoy)
-		mux.Get("/analytics/sales-history/one-off", app.AdminSalesHistoy)
-		mux.Get("/analytics/sales-history/subscriptions", app.AdminSalesHistoy)
+
+		//routes for business analytics >> order
+		mux.Get("/analytics/order/view/{id}", app.AdminOrderHistoy)
+
+		//routes for business analytics >> transaction-history
+		mux.Get("/analytics/transaction/view/{id}", app.AdminViewTransaction)
 
 		//routes for customer management >> view >> profile
-		mux.Get("/admin/customer/profile/view/{id}", app.AdminViewCustomerProfile)
+		mux.Get("/customer/profile/view/{id}", app.AdminViewCustomerProfile)
+
 		//Admin file server
 		publicFileServer := http.FileServer(http.Dir("./"))
 		mux.Handle("/*", http.StripPrefix("/", publicFileServer))

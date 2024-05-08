@@ -84,8 +84,9 @@ type Transaction struct {
 	TransactionStatusID int       `json:"transaction_status_id"`
 	ExpiryMonth         int       `json:"expiry_month"`
 	ExpiryYear          int       `json:"expiry_year"`
-	CreatedAt           time.Time `json:"-"`
-	UpdatedAt           time.Time `json:"-"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
+	TransactionStatus string `json:"transaction_status"`
 }
 
 // TransactionData is the type for all transaction
@@ -126,6 +127,6 @@ type Customer struct {
 	Email     string    `json:"email"`
 	ImageLink string    `json:"image_link"` //username_profile_id_yy-mm-dd_hh-mm-ss.jpf
 	AccountStatus int `json:"account_status"` //0 = deleted, 1 = active, 2 = deactivated 
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

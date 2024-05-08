@@ -1,0 +1,250 @@
+{{template "admin" .}}
+
+{{define "title"}}
+Transaction
+{{end}}
+
+{{define "content"}}
+{{$v := index .Data "transaction_type" }}
+<div class="">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="x_panel">
+                <div class="x_content">
+                    <div class="row" id="parent">
+                        <table id="transaction_details" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Amount</th>
+                                    <th>Currency</th>
+                                    <th>Last Four Digits</th>
+                                    <th>Bank Return Code</th>
+                                    {{if eq "all" $v}}
+                                    <th>Status</th>
+                                    {{end}}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- tbody is deployed by javascript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{end}}
+
+
+{{define "js"}}
+{{$v := index .Data "transaction_type" }}
+<script>
+    let token = localStorage.getItem("token")
+    let container = document.getElementById("parent")
+    let table = document.getElementById("transaction_details")
+    let tbody = table.getElementsByTagName("tbody")[0];
+
+
+    const requestOptions = {
+        method: 'post',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+        },
+    }
+
+    fetch('{{.API}}/api/admin/analytics/transaction/view/{{$v}}', requestOptions)
+        .then(response => response.json())
+        .then(function (data) {
+            console.log(data)
+            if (data) {
+                if (Object.keys(data)[0] === "error") {
+                    console.log("Internal Server Error")
+                    let newDiv = document.createElement('div')
+                    newDiv.innerHTML = '<p><b class="text-center" style="color:rgb(255, 0, 76); width: 30%">Internal Server Error</b></p>';
+                    container.appendChild(newDiv)
+                    return;
+                }
+                if (Object.keys(data).length === 1) {
+                    if (table) {
+                        // If the table exists, remove it from the DOM
+                        table.remove();
+                    }
+                    let newDiv = document.createElement('div')
+
+                    data.forEach(function (i) {
+                        let amount = formatCurrency(i.amount, i.currency)
+                        let createdAt = formatDate(i.created_at)
+                        let expMonth = getMonthName(i.expiry_month)
+                        newDiv.innerHTML = `
+                        <div class="col-md-8 col-sm-12 col-xs-12 profile_details">
+                            <div class="well profile_view">
+                                <div style="font-size: 15px;" class="col-sm-12">
+                                    <h4 class="brief"><i>Transaction Details # ${i.id}</i></h4>
+                                    <div class="left col-xs-4">
+                                        <ul class="list-unstyled">
+                                            <li>Amount: </li>
+                                            <li>Currency:</li>
+                                            <li>Status:</li>
+                                            <li>Payment Intent:</li>
+                                            <li>Payment Method:</li>
+                                            <li>Last Four Digits:</li>
+                                            <li>Bank Return Code:</li>
+                                            <li>Card Expiry Date:</li>
+                                        </ul>
+                                    </div>
+                                    <div class="left col-xs-8>
+                                        <ul style="font-weight: bold;" class="list-unstyled">
+                                            <li style="font-weight: bold;">${amount}</li>
+                                            <li style="font-weight: bold;">${i.currency}</li>
+                                            <li style="font-weight: bold;">${i.transaction_status}</li>
+                                            <li style="font-weight: bold;">${i.payment_intent}</li>
+                                            <li style="font-weight: bold;">${i.payment_method}</li>
+                                            <li style="font-weight: bold;">${i.last_four_digits}</li>
+                                            <li style="font-weight: bold;">${i.bank_return_code}</li>
+                                            <li style="font-weight: bold;">${expMonth}-${i.expiry_year}</li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                                <div class="col-xs-12 bottom text-center">
+                                    <div class="col-xs-12 col-sm-6 emphasis">
+                                        <p style="opacity: 0.5;">created: ${createdAt}</p>
+                                    </div>
+                                    <div class="col-xs-12 col-sm-6 emphasis">
+                                        <a href="/admin/analytics/transaction/delete/${i.id}"
+                                            class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete 
+                                        </a>           
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        `;
+                        container.appendChild(newDiv)
+                    })
+                    return;
+                }
+                data.forEach(function (i) {
+                    let newRow = tbody.insertRow();
+                    let newCell = newRow.insertCell();
+
+                    newCell = newRow.insertCell();
+                    item = document.createTextNode(i.id);
+                    newCell.appendChild(item);
+
+                    let curr = formatCurrency(i.amount, i.currency)
+                    newCell = newRow.insertCell();
+                    item = document.createTextNode(curr);
+                    newCell.appendChild(item);
+
+                    newCell = newRow.insertCell();
+                    item = document.createTextNode(i.last_four_digits);
+                    newCell.appendChild(item);
+
+                    newCell = newRow.insertCell();
+                    item = document.createTextNode(i.bank_return_code);
+                    newCell.appendChild(item);
+
+
+                    {{ if eq "all" $v }}
+                    newCell = newRow.insertCell();
+                    newCell.innerHTML = `
+                    <b>${i.transaction_status}<b>`
+
+                    if (i.transaction_status === "Pending") {
+                        newCell.classList.add("text-warning");
+                    } else if (i.transaction_status === "Cleared") {
+                        newCell.classList.add("text-success");
+                    } else if (i.transaction_status === "Declined") {
+                        newCell.classList.add("text-danger");
+                    } else {
+                        newCell.classList.add("text-info");
+                    }
+                    {{ end }}
+
+                    newCell = newRow.insertCell();
+                    newCell.innerHTML = `
+                        <a href="/admin/analytics/transaction/view/${i.id}" 
+                            class="btn btn-primary btn-xs"><i class="fa fa-folder"></i> View
+                        </a>
+                        <a href="/admin/analytics/transaction/delete/${i.id}" 
+                            class="btn btn-danger btn-xs"><i class="fa fa-trash-o"></i> Delete
+                            </a>`;
+
+                })
+
+
+            } else {
+                console.log("No data available")
+                let newDiv = document.createElement('div')
+                newDiv.innerHTML = `<p class="text-center"><b style="color:rgb(255, 0, 76); width: 30%">
+            No data available</b></p>`;
+                container.appendChild(newDiv)
+                return;
+            }
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
+
+    function formatDate(time) {
+        const input = "2024-06-25T00:00:00Z";
+
+        // Parse the input string into a Date object
+        const date = new Date(input);
+
+        // Define arrays for month names and zero-padding for formatting
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const pad = (num) => num.toString().padStart(2, '0');
+
+        // Extract date components
+        const day = pad(date.getDate());
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        const seconds = pad(date.getSeconds());
+
+        // Format the date
+        const formattedDate = `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+
+        return formattedDate
+
+    }
+    //print currency into standard format
+    function formatCurrency(amount, currency) {
+        // Convert cents to taka
+        let t = parseFloat(amount / 100);
+        let c = currency.toUpperCase()
+
+        // Format the currency using toLocaleString method
+        return t.toLocaleString("en-" + c.substring(0, 2), {
+            style: "currency",
+            currency: c,
+        });
+    }
+
+    //getMonthName return the month name for month number
+    function getMonthName(monthNumber) {
+        m = parseInt(monthNumber)
+        // Array of month names
+        var months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        // Check if the month number is valid
+        if (m >= 1 && m <= 12) {
+            // Return the corresponding month name
+            return months[m - 1];
+        } else {
+            // Return an error message if the month number is invalid
+            return "Invalid month number";
+        }
+    }
+</script>
+{{end}}

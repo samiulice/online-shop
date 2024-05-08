@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anchor Links to Divs with Animation (HTML/CSS)</title>
+<style>
+  /* Style for the anchor links */
+  .anchor-link {
+    display: block;
+    margin-top: 20px; /* Adjust as needed */
+    text-decoration: none;
+    color: blue;
+  }
+
+  /* Styles for the divs */
+  .animated-div {
+    height: 500px;
+    background-color: #f0f0f0;
+    opacity: 0;
+    transition: opacity 1s; /* Transition for opacity change */
+  }
+
+  /* Styles for the divs when targeted */
+  .animated-div:target {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<!-- Div 1 with anchor link -->
+<a href="#div1" class="anchor-link">Go to Div 1</a>
+<div id="div1" class="animated-div">
+  <!-- Content of div1 -->
+  <h2>Div 1</h2>
+</div>
+
+<!-- Div 2 with anchor link -->
+<a href="#div2" class="anchor-link">Go to Div 2</a>
+<div id="div2" class="animated-div">
+  <!-- Content of div2 -->
+  <h2>Div 2</h2>
+</div>
+
+</body>
+</html>

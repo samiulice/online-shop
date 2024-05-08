@@ -1,0 +1,381 @@
+
+
+{{template "admin" .}}
+
+{{define "title"}}
+Order Details
+{{end}}
+
+{{define "css"}}
+<style>
+/* Style for the anchor links */
+.anchor-link {
+  display: block;
+  margin-top: 20px; /* Adjust as needed */
+  text-decoration: none;
+  color: blue;
+}
+
+/* Styles for the divs */
+.animated-div {
+  height: auto;
+  background-color: #f0f0f0;
+  transition: opacity 1s; /* Transition for opacity change */
+}
+
+/* Styles for the divs when targeted */
+.animated-div:target {
+  background-color: #a8f8dd;
+}
+</style>
+{{end}}
+
+{{define "content"}}
+{{$val := index .Data "history-type"}}
+<div class="row">
+  <div class="col-md-12">
+    <div class="x_panel">
+      <div class="x_title">
+        <h3 class="text-center">Order Summary</h3>
+        <ul class="nav navbar-right panel_toolbox">
+          <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+          </li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i
+                class="fa fa-wrench"></i></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="#">Settings 1</a>
+              </li>
+              <li><a href="#">Settings 2</a>
+              </li>
+            </ul>
+          </li>
+          <li><a class="close-link"><i class="fa fa-close"></i></a>
+          </li>
+        </ul>
+        <div class="clearfix"></div>
+      </div>
+      <div class="x_content">
+
+        <!-- start order summary -->
+        <table id="order_summary" class="table table-striped projects">
+          <thead>
+            <tr>
+              <th >Transaction ID</th>
+              <th>Customer</th>
+              <th>Product</th>
+              
+              {{if eq $val "subscriptions"}}
+              <th>Amount/month</th>
+              {{else}}
+              <th>Amount</th>
+              {{end}}
+              <th>Order Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- tbody is populated by javascript DOM interface -->
+          </tbody>
+        </table>
+        <!-- end order summary-->
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="row">
+  <div id="transaction_details" class="col-md-12 col-sm-12 col-xs-12 profile_details"></div>
+  <div class="clearfix"></div>
+</div>
+<div class="row">
+  <div id="customer_profile" class="col-md-12 col-sm-12 col-xs-12 profile_details"></div>
+  <div class="clearfix"></div>
+</div>
+{{end}}
+
+{{define "js"}}
+{{$val := index .Data "history-type"}}
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    let token = localStorage.getItem("token")
+    let table = document.getElementById("order_summary");
+    let transaction_details = document.getElementById("transaction_details");
+    let customer_profile = document.getElementById("customer_profile");
+    let tbody = table.getElementsByTagName("tbody")[0];
+
+    const requestOptions = {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+    }
+
+    fetch('{{.API}}/api/admin/analytics/order/view/{{$val}}', requestOptions)
+      .then(response => response.json())
+      .then(function (data) {
+        if (data){
+          if (Object.keys(data)[0] === "error"){
+            console.log("Internal Server Error")
+            let newRow = tbody.insertRow();
+            let newCell = newRow.insertCell();
+
+            document.getElementById("row-actions").classList.add("d-none");
+            newRow.classList.add("text-center");
+
+            newCell = newRow.insertCell();
+            newCell.setAttribute('colspan', 5);
+            newCell.innerHTML = '<b style="color:rgb(255, 0, 76); width: 30%">Internal Server Error</b>';
+            return;
+          }
+          
+          data.forEach(function (i) {
+            
+            //populate order_summary div
+            let newRow = tbody.insertRow();
+            let newCell = newRow.insertCell();
+            newCell.innerHTML = `<a href="/admin/analytics/transaction/view/${i.id}" target="_blank"> #${i.id}</a>`;
+
+            newCell = newRow.insertCell();
+            if (i.customer.image_link === "") {
+              newCell.innerHTML = `<a href="/admin/customer/profile/view/${i.customer.id}"target="_blank" >
+                                      <b>${i.customer.first_name}&nbsp;${i.customer.last_name}</b>
+                                  </a>`
+            } else {
+              newCell.innerHTML = `<a href="/admin/customer/profile/view/${i.customer.id}" target="_blank">
+                                      <img style="border: 2px solid #850108; 
+                                      border-radius: 100%;" src="/admin/images/${i.customer.image_link}" 
+                                      class="avatar" alt="Profile Picture">
+                                  </a>`
+            }
+
+            newCell = newRow.insertCell();
+            newCell.innerHTML = `<a href="/admin/products/vier/${i.dates.id}" target="_blank">
+                                    <b>${i.dates.name}</b>
+                                  </a>`;
+
+            let amount = formatCurrency(i.transaction.amount, i.transaction.currency);
+            let oderTime = formatDate(i.created_at);
+            let transactionTime = formatDate(i.transaction.created_at);
+            let expMonth = getMonthName(i.transaction.expiry_month);
+            
+            newCell = newRow.insertCell();
+            item = document.createTextNode(amount);
+            newCell.appendChild(item);
+
+            newCell = newRow.insertCell();
+            newCell.innerHTML = `<p style="opacity: 0.5;">${oderTime}</p>`;
+
+            newCell = newRow.insertCell();
+            if (i.transaction.id === 2){
+              newCell.innerHTML = `
+                <a href="/admin/analytics/order/edit/refund/${i.id}" 
+                  class="btn btn-warning btn-xs"><i class="fa fa-pencil"></i> Refund </a>
+                <a onclick="goBack()" class="btn btn-dark btn-xs"><i class="fa fa-backward"></i> Back </a>`;
+            } else {
+              newCell.innerHTML = `
+                <a href="javascript:void(0)" 
+                  class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> ${i.transaction.transaction_status} </a>
+                  <a onclick="goBack()" class="btn btn-dark btn-xs"><i class="fa fa-backward"></i> Back </a>`;
+            }
+
+            //populate transaction_details div
+            let transactionDiv = document.createElement('div');
+            transactionDiv.innerHTML = `
+              <div class="well profile_view">
+                  <div style="font-size: 15px;" class="col-sm-12">
+                      <h4 class="brief"><i>Transaction Details # ${i.transaction.id}</i></h4>
+                      <div class="left col-xs-4">
+                          <ul class="list-unstyled">
+                              <li>Amount: </li>
+                              <li>Currency:</li>
+                              <li>Status:</li>
+                              <li>Payment Intent:</li>
+                              <li>Payment Method:</li>
+                              <li>Last Four Digits:</li>
+                              <li>Bank Return Code:</li>
+                              <li>Card Expiry Date:</li>
+                          </ul>
+                      </div>
+                      <div class="left col-xs-8>
+                          <ul style="font-weight: bold;" class="list-unstyled">
+                              <li style="font-weight: bold;">${amount}</li>
+                              <li style="font-weight: bold;">${i.transaction.currency}</li>
+                              <li style="font-weight: bold;">${i.transaction.transaction_status}</li>
+                              <li style="font-weight: bold;">${i.transaction.payment_intent}</li>
+                              <li style="font-weight: bold;">${i.transaction.payment_method}</li>
+                              <li style="font-weight: bold;">${i.transaction.last_four_digits}</li>
+                              <li style="font-weight: bold;">${i.transaction.bank_return_code}</li>
+                              <li style="font-weight: bold;">${expMonth}-${i.transaction.expiry_year}</li>
+                          </ul>
+                      </div>
+
+                  </div>
+                  <div class="col-xs-12 bottom text-center">
+                      <div class="col-xs-12 col-sm-6 emphasis">
+                        <p style="opacity: 0.5;">created: ${transactionTime}</p>
+                      </div>
+                  </div>
+              </div>
+            `;
+            transaction_details.appendChild(transactionDiv);
+
+            //populate customer_profile div
+            let profileDiv = document.createElement('div');
+            let profileCreatedAt = formatDate(i.customer.created_at);
+            let profileUpdatedAt = formatDate(i.customer.updated_at);
+            let part_1 = `
+            <div class="col-md-6 col-sm-12 col-xs-12 profile_details">
+              <div class="well profile_view">
+                <div class="col-sm-12">
+                    <div class="left col-xs-7">
+                        <h1 class="text-center">${i.customer.first_name} ${i.customer.last_name}</h1>
+                        <hr>
+                        <p><strong>About: </strong> Backend Engineer/Golang. </p>
+                        <br>
+                        <div class="left col-xs-5">
+                          <ul class="list-unstyled">
+                              <li><i class="fa fa-info-circle"></i> Customer ID:</li>
+                              <li><i class="fa fa-location-arrow"></i> Address:</li>
+                              <li><i class="fa fa-envelope"></i> Email:</b></li>
+                              <li><i class="fa fa-phone"></i> Phone #:</li>
+                              <li><i class="fa fa-clock-o"></i> Created At:</li>
+                              <li><i class="fa fa-clock-o"></i> Upadeted At:</li>
+                          </ul>
+                        </div>
+                        <div class="left col-xs-7">
+                          <ul class="list-unstyled">
+                              <li><b>${i.customer.id}</b></li>
+                              <li><b class="text-danger">Update later</b></li>
+                              <li><b>${i.customer.email}</b></li>
+                              <li><b class="text-danger">Update later</b></li>
+                              <li><b>${profileCreatedAt}</b></li>
+                              <li><b>${profileUpdatedAt}</b></li>
+                          </ul>
+                        </div>
+                    </div>`
+                      let part_2 = ``
+                      if (i.customer.image_link === ""){
+                        part_2 = `<div class="right col-xs-5 text-center">
+                                <img src="/admin/images/user.png" alt="profile picture" class="img-container img-circle img-responsive">
+                            </div>
+                        </div>`
+                      } else{
+                          part_2 = `<div class="right col-xs-5 text-center">
+                                <img src="/admin/images/${i.customer.image_link}" alt="profile picture" class="img-container img-circle img-responsive">
+                            </div>
+                        </div>`
+                      }
+                  let part_3 = `
+                            <div class="col-xs-12 bottom text-center">
+                              <div class="col-xs-12 col-sm-6 emphasis">
+                                  <p class="ratings">
+                                      <a>4.0</a>
+                                      <a href="#"><span class="fa fa-star"></span></a>
+                                      <a href="#"><span class="fa fa-star"></span></a>
+                                      <a href="#"><span class="fa fa-star"></span></a>
+                                      <a href="#"><span class="fa fa-star"></span></a>
+                                      <a href="#"><span class="fa fa-star-o"></span></a>
+                                  </p>
+                              </div>
+                              <div class="col-xs-12 col-sm-6 emphasis">
+                                  <a href="/admin/customer/profile/send-msg/${i.customer.id}" class="btn btn-info btn-xs"> <i class="fa fa-user">
+                                      </i> <i class="fa fa-comments-o"></i> Send Message</a>
+                                    <a href="/admin/customer/profile/edit/${i.customer.id}" class="btn btn-warning btn-xs"> <i class="fa fa-user">
+                                    </i> <i class="fa fa-comments-o"></i> Edit</a>
+                                  <a href="/admin/customer/profile/delete/${i.customer.id}" class="btn btn-danger btn-xs"> <i class="fa fa-user">
+                                      </i> <i class="fa fa-comments-o"></i> Delete</a>
+                              </div>
+                          </div>
+                      </div>
+                  </div>`
+
+              profileDiv.innerHTML = part_1 +part_2 +part_3;
+              customer_profile.appendChild(profileDiv)
+          
+          })
+
+          
+        } else {
+          console.log("no data")
+          let newRow = tbody.insertRow();
+          let newCell = newRow.insertCell();
+
+          document.getElementById("row-actions").classList.add("d-none");
+          newRow.classList.add("text-center");
+
+          newCell = newRow.insertCell();
+          newCell.setAttribute('colspan', 5);
+          newCell.innerHTML = "<b>No data available</b>";
+        }
+      })
+      .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+    });
+
+    function formatDate(time) {
+      const input = "2024-06-25T00:00:00Z";
+
+      // Parse the input string into a Date object
+      const date = new Date(input);
+
+      // Define arrays for month names and zero-padding for formatting
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const pad = (num) => num.toString().padStart(2, '0');
+
+      // Extract date components
+      const day = pad(date.getDate());
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+      const hours = pad(date.getHours());
+      const minutes = pad(date.getMinutes());
+      const seconds = pad(date.getSeconds());
+
+      // Format the date
+      const formattedDate = `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+
+      return formattedDate
+
+    }
+    //print currency into standard format
+    function formatCurrency(amount, currency) {
+      // Convert cents to taka
+      let t = parseFloat(amount / 100);
+      let c = currency.toUpperCase()
+
+      // Format the currency using toLocaleString method
+      return t.toLocaleString("en-" + c.substring(0, 2), {
+          style: "currency",
+          currency: c,
+      });
+    }
+
+    //getMonthName return the month name for month number
+    function getMonthName(monthNumber) {
+      m = parseInt(monthNumber)
+      // Array of month names
+      var months = [
+          "January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"
+      ];
+
+      // Check if the month number is valid
+      if (m >= 1 && m <= 12) {
+          // Return the corresponding month name
+          return months[m - 1];
+      } else {
+          // Return an error message if the month number is invalid
+          return "Invalid month number";
+      }
+    }
+    function goBack() {
+      window.location.href = document.referrer;
+    }
+</script>
+{{end}}

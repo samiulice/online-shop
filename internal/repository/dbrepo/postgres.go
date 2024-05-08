@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"online_store/internal/models"
+	"strconv"
 	"time"
 )
 
@@ -143,15 +144,18 @@ func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 
 	query := `
 		SELECT 
-			o.id, o.dates_id, o.transaction_id, o.customer_id, o.status_id,
-			o.quantity, o.amount, o.created_at, o.updated_at, 
-			d.id, d.name, t.id, t.amount, t.currency, t.last_four_digits,
-			t.expiry_month, t.expiry_year, t.payment_intent,
-			t.bank_return_code, c.id, c.first_name, c.last_name, c.email, c.image_link
+			o.id, o.dates_id, o.transaction_id, o.customer_id, o.status_id, o.quantity,
+			o.amount, o.created_at, o.updated_at, d.id, d.name, d.description, d.is_recurring,
+			d.plan_id, d.plan_title, d.plan_description, d.package_weight, d.package_price,
+			d.stock_level, d.image_link, d.created_at, d.updated_at, t.id, t.amount, t.currency,
+			t.payment_intent, payment_method, t.last_four_digits, t.bank_return_code, 
+			t.transaction_status_id, t.expiry_month, t.expiry_year, t.created_at, t.updated_at,
+			 ts.name, c.id, c.first_name, c.last_name, c.email, c.image_link, c.created_at, c.updated_at
 		FROM
 			orders o
 			LEFT JOIN dates d on (o.dates_id = d.id)
 			LEFT JOIN transactions t on (o.transaction_id = t.id)
+			LEFT JOIN transaction_status ts on (t.transaction_status_id = ts.id)
 			LEFT JOIN customers c on (o.customer_id = c.id)
 		`
 
@@ -164,26 +168,23 @@ func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 
 	if statusType == "all" {
 		query = query + trails
-		rows, err = m.DB.QueryContext(ctx, query)
 	} else if statusType == "completed" {
 		query = query + ` WHERE o.status_id = 1` + trails
-		rows, err = m.DB.QueryContext(ctx, query)
 	} else if statusType == "refunded" {
 		query = query + ` WHERE o.status_id = 2` + trails
-		rows, err = m.DB.QueryContext(ctx, query)
 	} else if statusType == "cancelled" {
 		query = query + ` WHERE o.status_id = 3` + trails
-		rows, err = m.DB.QueryContext(ctx, query)
 	} else if statusType == "one-off" {
 		query = query + ` WHERE d.is_recurring = 0` + trails
-		rows, err = m.DB.QueryContext(ctx, query)
 	} else if statusType == "subscriptions" {
 		query = query + ` WHERE d.is_recurring = 1` + trails
-		rows, err = m.DB.QueryContext(ctx, query)
+	} else if _, err := strconv.Atoi(statusType); err == nil {
+		query = query + ` WHERE o.id = ` + statusType + trails
 	} else {
 		return orders, errors.New("invalid function parameter for the database function call")
 	}
 
+	rows, err = m.DB.QueryContext(ctx, query)
 	if err != nil {
 		return orders, err
 	}
@@ -201,21 +202,42 @@ func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 			&o.Amount,
 			&o.CreatedAt,
 			&o.UpdatedAt,
+
 			&o.Dates.ID,
 			&o.Dates.Name,
+			&o.Dates.Description,
+			&o.Dates.IsRecurring,
+			&o.Dates.PlanID,
+			&o.Dates.PlanTitle,
+			&o.Dates.PlanDescription,
+			&o.Dates.PackageWeight,
+			&o.Dates.PackagePrice,
+			&o.Dates.StockLevel,
+			&o.Dates.ImageLink,
+			&o.Dates.CreatedAt,
+			&o.Dates.UpdatedAt,
+
 			&o.Transaction.ID,
 			&o.Transaction.Amount,
 			&o.Transaction.Currency,
+			&o.Transaction.PaymentIntent,
+			&o.Transaction.PaymentMethod,
 			&o.Transaction.LastFourDigits,
+			&o.Transaction.BankReturnCode,
+			&o.Transaction.TransactionStatusID,
 			&o.Transaction.ExpiryMonth,
 			&o.Transaction.ExpiryYear,
-			&o.Transaction.PaymentIntent,
-			&o.Transaction.BankReturnCode,
+			&o.Transaction.CreatedAt,
+			&o.Transaction.UpdatedAt,
+			&o.Transaction.TransactionStatus,
+
 			&o.Customer.ID,
 			&o.Customer.FirstName,
 			&o.Customer.LastName,
 			&o.Customer.Email,
 			&o.Customer.ImageLink,
+			&o.Customer.CreatedAt,
+			&o.Customer.UpdatedAt,
 		)
 		if err != nil {
 			return orders, err
@@ -225,6 +247,85 @@ func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 
 	// return orders, errors.New("testing errors")
 	return orders, nil
+}
+
+// Database Functions that is related to Order processing activity
+// GetOrdersHistory returns a slice of all orders with associated customer and transaction info.
+//if statusType == all, it will return list all orders
+//if statusType == completed, it will return list of completed orders
+//if statusType == refunded, it will return list of refunded orders
+//if statusType == cancelled, it will return list of cancelled orders
+
+func (m *postgresDBRepo) GetTransactionsHistory(statusType string) ([]*models.Transaction, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var transactions []*models.Transaction
+
+	query := `
+		SELECT 
+			t.id, t.amount, t.currency, t.payment_intent, t.payment_method,
+			t.last_four_digits, t.bank_return_code, t.expiry_month, t.expiry_year,
+			t.created_at, t.updated_at, ts.name
+		FROM
+			transactions t
+			LEFT JOIN transaction_status ts on (t.transaction_status_id = ts.id)
+		`
+
+	trails := `
+		 ORDER BY
+			t.created_at desc`
+
+	var rows *sql.Rows
+	var err error
+
+	if statusType == "all" {
+		query = query + trails
+
+	} else if statusType == "pending" {
+		query = query + ` WHERE t.transaction_status_id = 1` + trails
+	} else if statusType == "cleared" {
+		query = query + ` WHERE t.transaction_status_id = 2` + trails
+	} else if statusType == "declined" {
+		query = query + ` WHERE t.transaction_status_id = 3` + trails
+	} else if statusType == "refunded" {
+		query = query + ` WHERE t.transaction_status_id = 4` + trails
+	} else if statusType == "partially-refunded" {
+		query = query + ` WHERE t.transaction_status_id = 5` + trails
+	} else {
+		query = query + ` WHERE t.id = ` + statusType + trails
+	}
+
+	rows, err = m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return transactions, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var t models.Transaction
+		err = rows.Scan(
+			&t.ID,
+			&t.Amount,
+			&t.Currency,
+			&t.PaymentIntent,
+			&t.PaymentMethod,
+			&t.LastFourDigits,
+			&t.BankReturnCode,
+			&t.ExpiryMonth,
+			&t.ExpiryYear,
+			&t.CreatedAt,
+			&t.UpdatedAt,
+			&t.TransactionStatus,
+		)
+		if err != nil {
+			return transactions, err
+		}
+		transactions = append(transactions, &t)
+	}
+
+	// return orders, errors.New("testing errors")
+	return transactions, nil
 }
 
 // Database Functions that relates to User Account activity
@@ -332,4 +433,70 @@ func (m *postgresDBRepo) GetUserbyToken(token string) (*models.User, error) {
 		return nil, err
 	}
 	return &u, nil
+}
+
+// Database Functions that is related to Customer profile
+
+// GetCustomerProfile returns a slice of all customer's info.
+// if index == all, it will return list all profiles
+// if index == deleted, it will return list of deleted profiles
+// if index == active, it will return list of active profiles
+// if index == deactive, it will return list of deactive profiles
+// if index is a type of int, it will return customer profile corresponds to id = index
+func (m *postgresDBRepo) GetCustomerProfile(index string) ([]*models.Customer, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var customers []*models.Customer
+
+	query := `
+		SELECT 
+			id, first_name, last_name, email, image_link, account_status, created_at, updated_at
+		FROM
+			customers
+		`
+
+	trails := `
+		 ORDER BY
+			created_at desc`
+
+	if index == "all" {
+		query = query + trails
+	} else if index == "deleted" {
+		query = query + ` WHERE account_status = 0` + trails
+	} else if index == "active" {
+		query = query + ` WHERE account_status = 1` + trails
+	} else if index == "deactived" {
+		query = query + ` WHERE account_status = 2` + trails
+	} else {
+		query = query + ` WHERE id = ` + index + trails
+
+	}
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return customers, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var c models.Customer
+		err = rows.Scan(
+			&c.ID,
+			&c.FirstName,
+			&c.LastName,
+			&c.Email,
+			&c.ImageLink,
+			&c.AccountStatus,
+			&c.CreatedAt,
+			&c.UpdatedAt,
+		)
+		if err != nil {
+			return customers, err
+		}
+		customers = append(customers, &c)
+	}
+
+	// return orders, errors.New("testing errors")
+	return customers, nil
 }

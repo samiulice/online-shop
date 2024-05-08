@@ -9,7 +9,15 @@ create_table("customers") {
     t.Column("updated_at", "date", {})
 }
 
-sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES('Afsana', 'Mitu', 'afsanamitu@gmail.com', 'afsanamitu_profile_01_2024-06-25_00-00-00.jpg', 0, '2024-06-25 00:00:00', '2024-06-25 00:00:00')");
+sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES('Afsana', 'Mitu', 'afsanamitu@gmail.com', 'afsanamitu_profile_01_2024-06-25_00-00-00.jpg', 2, '2024-06-25 00:00:00', '2024-06-25 00:00:00')");
 sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES('Adiyat', 'Naba', 'adiyatnaba@gmail.com', 'adiyatnaba_profile_02_2024-06-25_00-00-00.jpg', 1, '2024-06-25 00:00:00', '2024-06-25 00:00:00')");
-sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES('Afnan', 'Nuzha', 'afnannuzha@gmail.com', 'afnannuzha_profile_03_2024-06-25_00-00-00.jpg', 2, '2024-06-25 00:00:00', '2024-06-25 00:00:00')");
-sql("INSERT INTO customers(first_name, last_name, email, image_link, created_at, updated_at) VALUES	('Sam','sam','sam@sam.com','','2024-05-07 00:00:00','2024-05-07 00:00:00')");
+sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES('Afnan', 'Nuzha', 'afnannuzha@gmail.com', 'afnannuzha_profile_03_2024-06-25_00-00-00.jpg', 1, '2024-06-25 00:00:00', '2024-06-25 00:00:00')");
+sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES	('Sam','sam','sam@sam.com','',1,'2024-05-07 00:00:00','2024-05-07 00:00:00')");
+
+sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES('Afsana', 'Mitu', 'afsana@gmail.com', '', 2, '2024-06-25 00:00:00', '2024-06-25 00:00:00')");
+sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES('Adiyat', 'Naba', 'adiyat@gmail.com', '', 1, '2024-06-25 00:00:00', '2024-06-25 00:00:00')");
+sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES('Afnan', 'Nuzha', 'afnan@gmail.com', '', 2, '2024-06-25 00:00:00', '2024-06-25 00:00:00')");
+sql("INSERT INTO customers(first_name, last_name, email, image_link, account_status, created_at, updated_at) VALUES	('Sam','sam','sam@sam.com','',1,'2024-05-07 00:00:00','2024-05-07 00:00:00')");
+
+
+

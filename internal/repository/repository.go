@@ -14,6 +14,9 @@ type DatabaseRepo interface {
 
 	//Order
 	GetOrdersHistory(statusType string) ([]*models.Order, error)
+	
+	//Transaction
+	GetTransactionsHistory(statusType string) ([]*models.Transaction, error)
 	//User
 	GetUserDetails(index, paramType string) (models.User, error)
 	UpdatePasswordByUserID(id, newPassword string) error
@@ -21,4 +24,7 @@ type DatabaseRepo interface {
 	//Token
 	InsertToken(t *models.Token, u models.User) error
 	GetUserbyToken(token string) (*models.User, error)
+
+	//Customer
+	GetCustomerProfile(index string) ([]*models.Customer, error)
 }
