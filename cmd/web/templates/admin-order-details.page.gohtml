@@ -1,5 +1,3 @@
-
-
 {{template "admin" .}}
 
 {{define "title"}}
@@ -8,25 +6,27 @@ Order Details
 
 {{define "css"}}
 <style>
-/* Style for the anchor links */
-.anchor-link {
-  display: block;
-  margin-top: 20px; /* Adjust as needed */
-  text-decoration: none;
-  color: blue;
-}
+  /* Style for the anchor links */
+  .anchor-link {
+    display: block;
+    margin-top: 20px;
+    /* Adjust as needed */
+    text-decoration: none;
+    color: blue;
+  }
 
-/* Styles for the divs */
-.animated-div {
-  height: auto;
-  background-color: #f0f0f0;
-  transition: opacity 1s; /* Transition for opacity change */
-}
+  /* Styles for the divs */
+  .animated-div {
+    height: auto;
+    background-color: #f0f0f0;
+    transition: opacity 1s;
+    /* Transition for opacity change */
+  }
 
-/* Styles for the divs when targeted */
-.animated-div:target {
-  background-color: #a8f8dd;
-}
+  /* Styles for the divs when targeted */
+  .animated-div:target {
+    background-color: #a8f8dd;
+  }
 </style>
 {{end}}
 
@@ -61,7 +61,7 @@ Order Details
         <table id="order_summary" class="table table-striped projects">
           <thead>
             <tr>
-              <th >Transaction ID</th>
+              <th>Transaction ID</th>
               <th>Customer</th>
               <th>Product</th>
               
@@ -70,8 +70,12 @@ Order Details
               {{else}}
               <th>Amount</th>
               {{end}}
-              <th>Order Date</th>
-              <th>Action</th>
+
+              <th>Oreder Status</th>
+              <th>Transaction Status</th>
+              <th>Order Timestamp</th>
+              <th>Last Updated</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -83,29 +87,28 @@ Order Details
     </div>
   </div>
 </div>
-
-
-
-
 <div class="row">
-  <div id="transaction_details" class="col-md-12 col-sm-12 col-xs-12 profile_details"></div>
+  <div id="customer_profile" class="col-md-10 col-sm-10 col-xs-12 profile_details"></div>
   <div class="clearfix"></div>
 </div>
 <div class="row">
-  <div id="customer_profile" class="col-md-12 col-sm-12 col-xs-12 profile_details"></div>
+  <div id="transaction_details" class="col-md-6 col-sm-10 col-xs-12 profile_details"></div>
   <div class="clearfix"></div>
 </div>
 {{end}}
 
 {{define "js"}}
 {{$val := index .Data "history-type"}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+  let token = localStorage.getItem("token")
   window.addEventListener('DOMContentLoaded', (event) => {
-    let token = localStorage.getItem("token")
+    
     let table = document.getElementById("order_summary");
+    let tbody = table.getElementsByTagName("tbody")[0];
     let transaction_details = document.getElementById("transaction_details");
     let customer_profile = document.getElementById("customer_profile");
-    let tbody = table.getElementsByTagName("tbody")[0];
+
 
     const requestOptions = {
       method: 'post',
@@ -119,8 +122,8 @@ Order Details
     fetch('{{.API}}/api/admin/analytics/order/view/{{$val}}', requestOptions)
       .then(response => response.json())
       .then(function (data) {
-        if (data){
-          if (Object.keys(data)[0] === "error"){
+        if (data) {
+          if (Object.keys(data)[0] === "error") {
             console.log("Internal Server Error")
             let newRow = tbody.insertRow();
             let newCell = newRow.insertCell();
@@ -133,21 +136,23 @@ Order Details
             newCell.innerHTML = '<b style="color:rgb(255, 0, 76); width: 30%">Internal Server Error</b>';
             return;
           }
-          
+
           data.forEach(function (i) {
-            
+
             //populate order_summary div
             let newRow = tbody.insertRow();
             let newCell = newRow.insertCell();
-            newCell.innerHTML = `<a href="/admin/analytics/transaction/view/${i.id}" target="_blank"> #${i.id}</a>`;
+            newCell.innerHTML = `<a href="#transaction_details"> #${i.id}</a>`;
 
             newCell = newRow.insertCell();
             if (i.customer.image_link === "") {
-              newCell.innerHTML = `<a href="/admin/customer/profile/view/${i.customer.id}"target="_blank" >
-                                      <b>${i.customer.first_name}&nbsp;${i.customer.last_name}</b>
+              newCell.innerHTML = `<a href="#customer_profile">
+                                      <img style="border: 2px solid #850108; 
+                                      border-radius: 100%;" src="/admin/images/user.png" 
+                                      class="avatar" alt="Profile Picture">
                                   </a>`
             } else {
-              newCell.innerHTML = `<a href="/admin/customer/profile/view/${i.customer.id}" target="_blank">
+              newCell.innerHTML = `<a href="#customer_profile">
                                       <img style="border: 2px solid #850108; 
                                       border-radius: 100%;" src="/admin/images/${i.customer.image_link}" 
                                       class="avatar" alt="Profile Picture">
@@ -155,152 +160,190 @@ Order Details
             }
 
             newCell = newRow.insertCell();
-            newCell.innerHTML = `<a href="/admin/products/vier/${i.dates.id}" target="_blank">
+            newCell.innerHTML = `<a href="/admin/products/view/${i.dates.id}" target="_blank">
                                     <b>${i.dates.name}</b>
                                   </a>`;
 
             let amount = formatCurrency(i.transaction.amount, i.transaction.currency);
-            let oderTime = formatDate(i.created_at);
+            let orderTime = formatDate(i.created_at);
             let transactionTime = formatDate(i.transaction.created_at);
             let expMonth = getMonthName(i.transaction.expiry_month);
-            
+
             newCell = newRow.insertCell();
             item = document.createTextNode(amount);
             newCell.appendChild(item);
 
-            newCell = newRow.insertCell();
-            newCell.innerHTML = `<p style="opacity: 0.5;">${oderTime}</p>`;
+            newCell = newRow.insertCell();          
+            if (i.status_id === 1) {
+              newCell.innerHTML = `<span class="badge rounded-pill bg-primary">Processing</span>`
+            } else if (i.status_id  === 2) {
+              newCell.innerHTML = `<span class="badge rounded-pill bg-success">Completed</span>`
+            } else if (i.status_id  === 3) {
+              newCell.innerHTML = `<span class="badge rounded-pill bg-danger">Cancelled</span>`
+            }
 
             newCell = newRow.insertCell();
-            if (i.transaction.id === 2){
-              newCell.innerHTML = `
-                <a href="/admin/analytics/order/edit/refund/${i.id}" 
-                  class="btn btn-warning btn-xs"><i class="fa fa-pencil"></i> Refund </a>
-                <a onclick="goBack()" class="btn btn-dark btn-xs"><i class="fa fa-backward"></i> Back </a>`;
+            if (i.transaction.transaction_status_id == 1){
+              newCell.innerHTML = `<span class="badge bg-danger">Pending</span>`;
+            } else if (i.transaction.transaction_status_id == 2){
+              newCell.innerHTML = `<span class="badge bg-success">Success</span>`;
+            } else if (i.transaction.transaction_status_id == 3){
+              newCell.innerHTML = `<span class="badge bg-info">Declined</span>`;
             } else {
-              newCell.innerHTML = `
-                <a href="javascript:void(0)" 
-                  class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> ${i.transaction.transaction_status} </a>
-                  <a onclick="goBack()" class="btn btn-dark btn-xs"><i class="fa fa-backward"></i> Back </a>`;
+              newCell.innerHTML = `<span class="badge bg-warning">${i.transaction.transaction_status}</span>`;
             }
+
+            newCell = newRow.insertCell();
+            newCell.innerHTML = `<p style="opacity: 0.5;">${formatDate(i.created_at)}</p>`;
+            newCell = newRow.insertCell();
+            newCell.innerHTML = `<p style="opacity: 0.5;">${formatDate(i.updated_at)}</p>`;
+
+            newCell = newRow.insertCell();
+            htmlContent = ``;
+            if (i.transaction.transaction_status_id === 2 && i.status_id === 1) {
+              if(i.dates.id === 1) {
+                htmlContent = htmlContent + `
+                  <a  href="#!" onclick="refundOrder('{{.API}}/api/admin/analytics/order/refund/${i.id}-${i.transaction.id}')" id="refund-btn" class="btn btn-danger btn-xs"><i class="fa fa-pencil"></i> Cancel Order </a>`;
+              } else if (i.dates.id === 2){
+                htmlContent = htmlContent + `
+                  <a  href="#!" onclick="refundOrder('{{.API}}/api/admin/analytics/subscription/cancel/${i.id}-${i.transaction.id}')" id="refund-btn" class="btn btn-danger btn-xs"><i class="fa fa-pencil"></i> Cancel Subscription </a>`;
+              }
+            }
+            htmlContent = htmlContent +
+              `<a onclick="goBack()" class="btn btn-dark btn-xs"><i class="fa fa-backward"></i> Back </a>`;
+            newCell.innerHTML = htmlContent;
 
             //populate transaction_details div
             let transactionDiv = document.createElement('div');
             transactionDiv.innerHTML = `
               <div class="well profile_view">
-                  <div style="font-size: 15px;" class="col-sm-12">
-                      <h4 class="brief"><i>Transaction Details # ${i.transaction.id}</i></h4>
-                      <div class="left col-xs-4">
-                          <ul class="list-unstyled">
-                              <li>Amount: </li>
-                              <li>Currency:</li>
-                              <li>Status:</li>
-                              <li>Payment Intent:</li>
-                              <li>Payment Method:</li>
-                              <li>Last Four Digits:</li>
-                              <li>Bank Return Code:</li>
-                              <li>Card Expiry Date:</li>
-                          </ul>
-                      </div>
-                      <div class="left col-xs-8>
-                          <ul style="font-weight: bold;" class="list-unstyled">
-                              <li style="font-weight: bold;">${amount}</li>
-                              <li style="font-weight: bold;">${i.transaction.currency}</li>
-                              <li style="font-weight: bold;">${i.transaction.transaction_status}</li>
-                              <li style="font-weight: bold;">${i.transaction.payment_intent}</li>
-                              <li style="font-weight: bold;">${i.transaction.payment_method}</li>
-                              <li style="font-weight: bold;">${i.transaction.last_four_digits}</li>
-                              <li style="font-weight: bold;">${i.transaction.bank_return_code}</li>
-                              <li style="font-weight: bold;">${expMonth}-${i.transaction.expiry_year}</li>
-                          </ul>
-                      </div>
-
+                <div class="col-sm-12">
+                  <h4 class="brief text-center"><i>Transaction Details</i></h4>
+                  <div class="left col-xs-4">
+                    <ul>
+                      <li>Transaction ID: </li>
+                      <li>Amount: </li>
+                      <li>Currency:</li>
+                      <li>Status:</li>
+                      <li>Payment Intent:</li>
+                      <li>Payment Method:</li>
+                      <li>Last Four Digits:</li>
+                      <li>Bank Return Code:</li>
+                      <li>Card Expiry Date:</li>
+                    </ul>
+                  </div>
+                  <div class="left col-xs-8>
+                    <ul class="list-unstyled" style="font-weight: bold;" class="list-unstyled">
+                      <li style="font-weight: bold;">${i.transaction.id}</li>
+                      <li style="font-weight: bold;">${amount}</li>
+                      <li style="font-weight: bold;">${i.transaction.currency}</li>
+                      <li id="payment_status" style="font-weight: bold;">${i.transaction.transaction_status}</li>
+                      <li style="font-weight: bold;">${i.transaction.payment_intent}</li>
+                      <li style="font-weight: bold;">${i.transaction.payment_method}</li>
+                      <li style="font-weight: bold;">${i.transaction.last_four_digits}</li>
+                      <li style="font-weight: bold;">${i.transaction.bank_return_code}</li>
+                      <li style="font-weight: bold;">${expMonth}-${i.transaction.expiry_year}</li>                       
+                    </ul>
                   </div>
                   <div class="col-xs-12 bottom text-center">
                       <div class="col-xs-12 col-sm-6 emphasis">
-                        <p style="opacity: 0.5;">created: ${transactionTime}</p>
+                        <p style="opacity: 0.5;">Created: ${formatDate(i.created_at)}</p>
+                        <p style="opacity: 0.5;">Last Updated: ${formatDate(i.updated_at)}</p>
                       </div>
                   </div>
+                </div>
               </div>
             `;
+
             transaction_details.appendChild(transactionDiv);
+            let elem = document.getElementById("payment_status");
+            let status = i.transaction.transaction_status;
+            elem.classList.add("badge");
+            elem.classList.add("rounded-pill");
+            if (status === "Pending") {
+                elem.classList.add("bg-danger");
+            } else if (status === "Cleared") {
+                elem.classList.add("bg-success");
+            } else if (status === "Declined") {
+                elem.classList.add("bg-info");
+            } else {
+                elem.classList.add("bg-warning");
+            }
 
             //populate customer_profile div
             let profileDiv = document.createElement('div');
             let profileCreatedAt = formatDate(i.customer.created_at);
             let profileUpdatedAt = formatDate(i.customer.updated_at);
-            let part_1 = `
-            <div class="col-md-6 col-sm-12 col-xs-12 profile_details">
+
+            let imgSrc = i.customer.image_link
+            if (imgSrc === "") {
+              imgSrc = "user.png"
+            }            
+            profileDiv.innerHTML = `
               <div class="well profile_view">
                 <div class="col-sm-12">
+                  <div class="left col-xs-7">
                     <div class="left col-xs-7">
-                        <h1 class="text-center">${i.customer.first_name} ${i.customer.last_name}</h1>
-                        <hr>
-                        <p><strong>About: </strong> Backend Engineer/Golang. </p>
-                        <br>
-                        <div class="left col-xs-5">
-                          <ul class="list-unstyled">
-                              <li><i class="fa fa-info-circle"></i> Customer ID:</li>
-                              <li><i class="fa fa-location-arrow"></i> Address:</li>
-                              <li><i class="fa fa-envelope"></i> Email:</b></li>
-                              <li><i class="fa fa-phone"></i> Phone #:</li>
-                              <li><i class="fa fa-clock-o"></i> Created At:</li>
-                              <li><i class="fa fa-clock-o"></i> Upadeted At:</li>
-                          </ul>
-                        </div>
-                        <div class="left col-xs-7">
-                          <ul class="list-unstyled">
-                              <li><b>${i.customer.id}</b></li>
-                              <li><b class="text-danger">Update later</b></li>
-                              <li><b>${i.customer.email}</b></li>
-                              <li><b class="text-danger">Update later</b></li>
-                              <li><b>${profileCreatedAt}</b></li>
-                              <li><b>${profileUpdatedAt}</b></li>
-                          </ul>
-                        </div>
-                    </div>`
-                      let part_2 = ``
-                      if (i.customer.image_link === ""){
-                        part_2 = `<div class="right col-xs-5 text-center">
-                                <img src="/admin/images/user.png" alt="profile picture" class="img-container img-circle img-responsive">
-                            </div>
-                        </div>`
-                      } else{
-                          part_2 = `<div class="right col-xs-5 text-center">
-                                <img src="/admin/images/${i.customer.image_link}" alt="profile picture" class="img-container img-circle img-responsive">
-                            </div>
-                        </div>`
-                      }
-                  let part_3 = `
-                            <div class="col-xs-12 bottom text-center">
-                              <div class="col-xs-12 col-sm-6 emphasis">
-                                  <p class="ratings">
-                                      <a>4.0</a>
-                                      <a href="#"><span class="fa fa-star"></span></a>
-                                      <a href="#"><span class="fa fa-star"></span></a>
-                                      <a href="#"><span class="fa fa-star"></span></a>
-                                      <a href="#"><span class="fa fa-star"></span></a>
-                                      <a href="#"><span class="fa fa-star-o"></span></a>
-                                  </p>
-                              </div>
-                              <div class="col-xs-12 col-sm-6 emphasis">
-                                  <a href="/admin/customer/profile/send-msg/${i.customer.id}" class="btn btn-info btn-xs"> <i class="fa fa-user">
-                                      </i> <i class="fa fa-comments-o"></i> Send Message</a>
-                                    <a href="/admin/customer/profile/edit/${i.customer.id}" class="btn btn-warning btn-xs"> <i class="fa fa-user">
-                                    </i> <i class="fa fa-comments-o"></i> Edit</a>
-                                  <a href="/admin/customer/profile/delete/${i.customer.id}" class="btn btn-danger btn-xs"> <i class="fa fa-user">
-                                      </i> <i class="fa fa-comments-o"></i> Delete</a>
-                              </div>
-                          </div>
+                      <h3 class="text-center">${i.customer.first_name} ${i.customer.last_name}</h3>
+                      <hr>
+                      <p><strong>About: </strong> Backend Engineer/Golang. </p>
+                      <br>
+                      <div class="left col-xs-5">
+                        <ul class="list-unstyled">
+                            <li><i class="fa fa-info-circle"></i> Customer ID:</li>
+                            <li><i class="fa fa-location-arrow"></i> Address:</li>
+                            <li><i class="fa fa-envelope"></i> Email:</b></li>
+                            <li><i class="fa fa-phone"></i> Phone #:</li>
+                            <li><i class="fa fa-clock-o"></i> Created At:</li>
+                            <li><i class="fa fa-clock-o"></i> Upadeted At:</li>
+                        </ul>
                       </div>
-                  </div>`
+                      <div class="left col-xs-7">
+                        <ul class="list-unstyled">
+                            <li><b>${i.customer.id}</b></li>
+                            <li><b class="text-danger">Update later</b></li>
+                            <li><b>${i.customer.email}</b></li>
+                            <li><b class="text-danger">Update later</b></li>
+                            <li><b>${profileCreatedAt}</b></li>
+                            <li><b>${profileUpdatedAt}</b></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="right col-xs-5 text-center">
+                    <img src="/admin/images/${imgSrc}" alt="" class="img-circle img-responsive">
+                  </div>
+                </div>
+                <div class="col-xs-12 bottom text-center">
+                  <div class="col-xs-12 col-sm-6 emphasis">
+                    <p class="ratings">
+                      <a>4.0</a>
+                      <a href="#"><span class="fa fa-star"></span></a>
+                      <a href="#"><span class="fa fa-star"></span></a>
+                      <a href="#"><span class="fa fa-star"></span></a>
+                      <a href="#"><span class="fa fa-star"></span></a>
+                      <a href="#"><span class="fa fa-star-o"></span></a>
+                    </p>
+                  </div>
+                  <div class="col-xs-12 col-sm-6 emphasis">
+                    <a href="/admin/customer/profile/send-msg/${i.customer.id}" class="btn btn-info btn-xs">
+                      <i class="fa fa-user"></i><i class="fa fa-comments-o"></i> Send Message
+                    </a>
+                    <a href="/admin/customer/profile/edit/${i.customer.id}" class="btn btn-warning btn-xs">
+                      <i class="fa fa-user"></i><i class="fa fa-comments-o"></i> Edit
+                    </a>
+                    <a href="/admin/customer/profile/delete/${i.customer.id}" class="btn btn-danger btn-xs">
+                      <i class="fa fa-user"></i><i class="fa fa-comments-o"></i> Delete
+                    </a>
+                  </div>
+                </div>
+              </div>
+            `
+            customer_profile.appendChild(profileDiv)
 
-              profileDiv.innerHTML = part_1 +part_2 +part_3;
-              customer_profile.appendChild(profileDiv)
-          
           })
 
-          
+
         } else {
           console.log("no data")
           let newRow = tbody.insertRow();
@@ -317,65 +360,150 @@ Order Details
       .catch(error => {
         console.error('There was a problem with the fetch operation:', error);
       });
+  });
+
+  function refundOrder(fetchURL, msg){
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to undo this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, refund order!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const requestOptions = {
+          method: 'post',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+        }
+
+        fetch(fetchURL, requestOptions)
+        .then(response => response.json())
+        .then(function (data) {
+          console.log(data)
+          if (data.error){
+            showErrorMessage(data.message);
+          } else {
+            showSuccessMessage(data.message, function() {
+              location.reload();
+            });
+          }
+        });
+        
+      }
+    });
+  };
+
+  function formatDate(time) {
+    const input = "2024-06-25T00:00:00Z";
+
+    // Parse the input string into a Date object
+    const date = new Date(input);
+
+    // Define arrays for month names and zero-padding for formatting
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const pad = (num) => num.toString().padStart(2, '0');
+
+    // Extract date components
+    const day = pad(date.getDate());
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+
+    // Format the date
+    const formattedDate = `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+
+    return formattedDate
+
+  }
+  //print currency into standard format
+  function formatCurrency(amount, currency) {
+    // Convert cents to taka
+    let t = parseFloat(amount / 100);
+    let c = currency.toUpperCase()
+
+    // Format the currency using toLocaleString method
+    return t.toLocaleString("en-" + c.substring(0, 2), {
+      style: "currency",
+      currency: c,
+    });
+  }
+
+  //getMonthName return the month name for month number
+  function getMonthName(monthNumber) {
+    m = parseInt(monthNumber)
+    // Array of month names
+    var months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    // Check if the month number is valid
+    if (m >= 1 && m <= 12) {
+      // Return the corresponding month name
+      return months[m - 1];
+    } else {
+      // Return an error message if the month number is invalid
+      return "Invalid month number";
+    }
+  }
+  
+
+ //showSuccessMessage shows success message after successfully refunded 
+  function showSuccessMessage(msg){
+    
+  }
+
+  function showSuccessMessage(message, callback) {
+    // Display the success message (synchronously or with a delay)
+    document.getElementById("refund-btn").classList.add("d-none")
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      }
+    });
+    Toast.fire({
+      icon: "success",
+      title: message,
     });
 
-    function formatDate(time) {
-      const input = "2024-06-25T00:00:00Z";
+    // Assuming the message should be shown for 3 seconds before reloading
+    setTimeout(function() {
+        callback();
+    }, 3000); // Adjust the delay as needed
+  }
 
-      // Parse the input string into a Date object
-      const date = new Date(input);
-
-      // Define arrays for month names and zero-padding for formatting
-      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      const pad = (num) => num.toString().padStart(2, '0');
-
-      // Extract date components
-      const day = pad(date.getDate());
-      const month = months[date.getMonth()];
-      const year = date.getFullYear();
-      const hours = pad(date.getHours());
-      const minutes = pad(date.getMinutes());
-      const seconds = pad(date.getSeconds());
-
-      // Format the date
-      const formattedDate = `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-
-      return formattedDate
-
-    }
-    //print currency into standard format
-    function formatCurrency(amount, currency) {
-      // Convert cents to taka
-      let t = parseFloat(amount / 100);
-      let c = currency.toUpperCase()
-
-      // Format the currency using toLocaleString method
-      return t.toLocaleString("en-" + c.substring(0, 2), {
-          style: "currency",
-          currency: c,
-      });
-    }
-
-    //getMonthName return the month name for month number
-    function getMonthName(monthNumber) {
-      m = parseInt(monthNumber)
-      // Array of month names
-      var months = [
-          "January", "February", "March", "April", "May", "June",
-          "July", "August", "September", "October", "November", "December"
-      ];
-
-      // Check if the month number is valid
-      if (m >= 1 && m <= 12) {
-          // Return the corresponding month name
-          return months[m - 1];
-      } else {
-          // Return an error message if the month number is invalid
-          return "Invalid month number";
+  //showErrorMessage shows error message if there is any error occurs during refund process
+  function showErrorMessage(msg){
+    document.getElementById("refund-btn").classList.remove("d-none")
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
       }
-    }
-    function goBack() {
-      window.location.href = document.referrer;
-    }
+    });
+    Toast.fire({
+      icon: "error",
+      title: msg,
+    });
+  }
 </script>
 {{end}}

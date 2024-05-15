@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"online_store/internal/cards"
@@ -165,6 +166,7 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 		txnID, err := app.SaveTransaction(models.Transaction{
 			Amount:              amount,
 			Currency:            data.Currency,
+			PaymentIntent:       subscription.ID,
 			PaymentMethod:       data.PaymentMethod,
 			LastFourDigits:      data.LastFourDigits,
 			TransactionStatusID: 2,
@@ -489,30 +491,90 @@ func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r
 	app.writeJSON(w, http.StatusOK, txn)
 }
 
-// AdminSalesHistoy return list of all sales to the corresponded category in JSON format
+// GetOrdersHistoy return list of all sales to the corresponded category in JSON format
 func (app *application) GetOrdersHistoy(w http.ResponseWriter, r *http.Request) {
-
 	statusType := path.Base(r.URL.Path)
-	Sales, err := app.DB.GetOrdersHistory(statusType)
-	if err != nil {
-		app.errorLog.Println(err)
-		app.badRequest(w, err)
-		return
+	if (statusType[0] >= '0' && statusType[0] <= '9'){
+		Orders, err := app.DB.GetOrdersHistory(statusType)
+		if err != nil {
+			app.errorLog.Println(err)
+			app.badRequest(w, err)
+			return
+		}
+		app.writeJSON(w, http.StatusOK, Orders)
+	} else {
+		var payload struct {
+			PageSize int `json:"page_size"`
+			CurrentPageIndex int `json:"current_page_index"`
+		}
+		err := app.readJSON(w,r,&payload)
+		if err != nil {
+			app.badRequest(w, err)
+			return
+		}
+		Orders, totalRecords, err := app.DB.GetOrdersHistoryPaginated(statusType, payload.PageSize, payload.CurrentPageIndex)
+		
+		if err != nil {
+			app.errorLog.Println(err)
+			app.badRequest(w, err)
+			return
+		}
+		var Resp struct {
+			PageSize int `json:"page_size"`
+			CurrentPageIndex int `json:"current_page_index"`
+			TotalRecords int `json:"total_records"`
+			Orders []*models.Order `json:"orders"`
+		}
+		Resp.PageSize = payload.PageSize
+		Resp.CurrentPageIndex = payload.CurrentPageIndex
+		Resp.TotalRecords = totalRecords
+		Resp.Orders = Orders
+		app.writeJSON(w, http.StatusOK, Resp)
 	}
-	app.writeJSON(w, http.StatusOK, Sales)
+	
 }
 
-// AdminSalesHistoy return list of all sales to the corresponded category in JSON format
+// GetTransactionHistory return list of all sales to the corresponded category in JSON format
 func (app *application) GetTransactionHistory(w http.ResponseWriter, r *http.Request) {
-
 	statusType := path.Base(r.URL.Path)
-	Sales, err := app.DB.GetTransactionsHistory(statusType)
-	if err != nil {
-		app.errorLog.Println(err)
-		app.badRequest(w, err)
-		return
+	
+	if (statusType[0] >= '0' && statusType[0] <= '9'){
+		Transactions, err := app.DB.GetTransactionsHistory(statusType)
+		if err != nil {
+			app.errorLog.Println(err)
+			app.badRequest(w, err)
+			return
+		}
+		app.writeJSON(w, http.StatusOK, Transactions)
+	} else {
+		var payload struct {
+			PageSize int `json:"page_size"`
+			CurrentPageIndex int `json:"current_page_index"`
+		}
+		err := app.readJSON(w,r,&payload)
+		if err != nil {
+			app.badRequest(w, err)
+			return
+		}
+		Transactions, totalRecords, err := app.DB.GetTransactionsHistoryPaginated(statusType, payload.PageSize, payload.CurrentPageIndex)
+		
+		if err != nil {
+			app.errorLog.Println(err)
+			app.badRequest(w, err)
+			return
+		}
+		var Resp struct {
+			PageSize int `json:"page_size"`
+			CurrentPageIndex int `json:"current_page_index"`
+			TotalRecords int `json:"total_records"`
+			Transactions []*models.Transaction `json:"transactions"`
+		}
+		Resp.PageSize = payload.PageSize
+		Resp.CurrentPageIndex = payload.CurrentPageIndex
+		Resp.TotalRecords = totalRecords
+		Resp.Transactions = Transactions
+		app.writeJSON(w, http.StatusOK, Resp)
 	}
-	app.writeJSON(w, http.StatusOK, Sales)
 }
 
 // AdminCustomerProfile return list of all customer in JSON format
@@ -526,4 +588,112 @@ func (app *application) AdminCustomerProfile(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	app.writeJSON(w, http.StatusOK, Sales)
+}
+
+// RefundCharge refund the charged money to the customer account
+func (app *application) RefundCharge(w http.ResponseWriter, r *http.Request) {
+	lastPart := path.Base(r.URL.Path)
+	ids := strings.Split(lastPart, "-")
+
+	orderStatusID, err := strconv.Atoi(ids[0])
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+	transactionStatusID, err := strconv.Atoi(ids[1])
+		if err != nil {
+			app.badRequest(w, err)
+			return
+		}
+
+	tr, err := app.DB.GetTransactionsHistory(ids[1])
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+
+	card := cards.Card{
+		Secret:   app.config.stripe.secret,
+		Key:      app.config.stripe.key,
+		Currency: tr[0].Currency,
+	}
+
+	err = card.Refund(tr[0].PaymentIntent, tr[0].Amount)
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+
+	//update database
+	err = app.DB.UpdateTransactionStatusID(transactionStatusID, 4) //update status id = 4 for refunded order
+	if err != nil {
+		app.badRequest(w, errors.New("order refunded suceessfully, but unable to update transaction status"))
+		return
+	}
+	err = app.DB.UpdateOrderStatusID(orderStatusID, 3) //update status id = 3 for cancelled order
+	if err != nil {
+		app.badRequest(w, errors.New("order refunded suceessfully, but unable to update transaction status"))
+		return
+	}
+	var resp struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+	resp.Error = false
+	resp.Message = "Order Refunded Successfully"
+	app.writeJSON(w, http.StatusOK, resp)
+}
+// CancelSubscription cancel a subscription
+func (app *application) CancelSubscription(w http.ResponseWriter, r *http.Request) {
+	lastPart := path.Base(r.URL.Path)
+	ids := strings.Split(lastPart, "-")
+
+	orderStatusID, err := strconv.Atoi(ids[0])
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+	transactionStatusID, err := strconv.Atoi(ids[1])
+		if err != nil {
+			app.badRequest(w, err)
+			return
+		}
+
+	tr, err := app.DB.GetTransactionsHistory(ids[1])
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+
+	card := cards.Card{
+		Secret:   app.config.stripe.secret,
+		Key:      app.config.stripe.key,
+		Currency: tr[0].Currency,
+	}
+
+	err = card.CancelSubscription(tr[0].PaymentIntent)
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+
+	//update database
+	err = app.DB.UpdateTransactionStatusID(transactionStatusID, 4) //update status id = 4 for refunded order
+	if err != nil {
+		app.badRequest(w, errors.New("subscription Cancelled suceessfully, but unable to update transaction status"))
+		return
+	}
+	err = app.DB.UpdateOrderStatusID(orderStatusID, 3) //update status id = 3 for cancelled order
+	if err != nil {
+		app.badRequest(w, errors.New("subscription Cancelled suceessfully, but unable to update order status"))
+		
+		return
+	}
+	var resp struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+	resp.Error = false
+	resp.Message = "Subscription Cancelled Successfully"
+	app.writeJSON(w, http.StatusOK, resp)
 }

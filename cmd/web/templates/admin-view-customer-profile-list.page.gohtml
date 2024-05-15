@@ -1,7 +1,9 @@
+
 {{template "admin" .}}
 
 {{define "title"}}
-Profile
+{{$v := index .Data "profile-type"}}
+{{printf "%s Profile" (titleCase $v)}}
 {{end}}
 
 {{define "css"}}
@@ -19,24 +21,13 @@ Profile
 
 {{define "content"}}
 <div class="">
-    <div class="page-title">
-        <div class="title_left">
-            <!-- <h3>Contacts Design</h3> TODO:Customer name goes here -->
-        </div>
-    </div>
-
-    <div class="clearfix"></div>
-
     <div class="row">
         <div class="col-md-12">
             <div class="x_panel">
                 <div class="x_content">
-                    <div class="row" id="parent-div">
+                    <div class="row" id="parent">
                       <div class="clearfix"></div>
-
-                      
-
-
+                      <!-- will be updated by Javascript DOM -->
                     </div>
                 </div>
             </div>
@@ -48,10 +39,10 @@ Profile
 
 
 {{define "js"}}
-{{$val := index .Data "type"}}
+{{$v := index .Data "profile-type"}}
 <script>
   let token = localStorage.getItem("token")
-  let container = document.getElementById("parent-div")
+  let container = document.getElementById("parent")
 
   const requestOptions = {
     method: 'post',
@@ -62,7 +53,7 @@ Profile
     },
   }
 
-  fetch('{{.API}}/api/admin/customer/profile/view/{{$val}}', requestOptions)
+  fetch('{{.API}}/api/admin/customer/profile/view/{{$v}}', requestOptions)
     .then(response => response.json())
     .then(function (data) {
       if (data){
@@ -72,18 +63,26 @@ Profile
           newDiv.innerHTML = '<p><b class="text-center" style="color:rgb(255, 0, 76); width: 30%">Internal Server Error</b></p>';
           container.appendChild(newDiv)
           return;
-        }
-        
+        }  
         data.forEach(function (i) {
           let newDiv = document.createElement('div')
-          let createdat = formatDate(i.created_at)
-          let updatedat = formatDate(i.created_at)
-          let part_1 = `
+          let imgLink = '';
+          i.image_link === "" ? imgLink = 'user.png' : imgLink = i.image_link
+
+          let backBtn = ``;
+          if (parseInt({{$v}})){
+            backBtn = `
+              <a onclick="goBack()" class="btn btn-dark btn-xs">
+                <i class="fa fa-backward"></i> Back
+              </a>`;
+              document.title = `${i.first_name} ${i.last_name}`
+          }
+          newDiv.innerHTML = `
           <div class="col-md-6 col-sm-12 col-xs-12 profile_details">
             <div class="well profile_view">
               <div class="col-sm-12">
                   <div class="left col-xs-7">
-                      <h1 class="text-center">${i.first_name} ${i.last_name}</h1>
+                      <h3 class="text-center">${i.first_name} ${i.last_name}</h3>
                       <hr>
                       <p><strong>About: </strong> Backend Engineer/Golang. </p>
                       <br>
@@ -103,24 +102,15 @@ Profile
                             <li><b class="text-danger">Update later</b></li>
                             <li><b>${i.email}</b></li>
                             <li><b class="text-danger">Update later</b></li>
-                            <li><b>${createdat}</b></li>
-                            <li><b>${updatedat}</b></li>
+                            <li><b>${formatDate(i.created_at)}</b></li>
+                            <li><b>${formatDate(i.created_at)}</b></li>
                         </ul>
                       </div>
-                  </div>`
-                    let part_2 = ``
-                    if (i.image_link === ""){
-                      part_2 = `<div class="right col-xs-5 text-center">
-                              <img src="/admin/images/user.png" alt="profile picture" class="img-container img-circle img-responsive">
-                          </div>
-                      </div>`
-                    } else{
-                        part_2 = `<div class="right col-xs-5 text-center">
-                              <img src="/admin/images/${i.image_link}" alt="profile picture" class="img-container img-circle img-responsive">
-                          </div>
-                      </div>`
-                    }
-                let part_3 = `
+                  </div>
+                  <div class="right col-xs-5 text-center">
+                      <img src="/admin/images/${imgLink}" alt="profile picture" class="img-container img-circle img-responsive">
+                  </div>
+                      </div>
                           <div class="col-xs-12 bottom text-center">
                             <div class="col-xs-12 col-sm-6 emphasis">
                                 <p class="ratings">
@@ -133,24 +123,25 @@ Profile
                                 </p>
                             </div>
                             <div class="col-xs-12 col-sm-6 emphasis">
-                                <a href="/admin/customer/profile/send-msg/${i.id}" class="btn btn-info btn-xs"> <i class="fa fa-user">
-                                    </i> <i class="fa fa-comments-o"></i> Send Message</a>
-                                  <a href="/admin/customer/profile/edit/${i.id}" class="btn btn-warning btn-xs"> <i class="fa fa-user">
-                                  </i> <i class="fa fa-comments-o"></i> Edit</a>
-                                <a href="/admin/customer/profile/delete/${i.id}" class="btn btn-danger btn-xs"> <i class="fa fa-user">
-                                    </i> <i class="fa fa-comments-o"></i> Delete</a>
+                              ${backBtn}
+                              <a href="/admin/customer/profile/send-msg/${i.id}" class="btn btn-info btn-xs"> <i class="fa fa-user">
+                                </i> <i class="fa fa-comments-o"></i> Send Message</a>
+                              <a href="/admin/customer/profile/edit/${i.id}" class="btn btn-warning btn-xs"> <i class="fa fa-user">
+                                </i> <i class="fa fa-comments-o"></i> Edit
+                              </a>
+                              <a href="/admin/customer/profile/delete/${i.id}" class="btn btn-danger btn-xs"> <i class="fa fa-user">
+                                </i> <i class="fa fa-comments-o"></i> Delete
+                              </a>
                             </div>
                         </div>
                     </div>
                 </div>`
-
-          newDiv.innerHTML = part_1 +part_2 +part_3;
           container.appendChild(newDiv)
         })
 
         
       } else {
-        console.log("Internal Server Error")
+        console.log("No data available")
           let newDiv = document.createElement('div')
           newDiv.innerHTML = `<p><b class="text-center" style="color:rgb(255, 0, 76); width: 30%">
             No data available</b></p>`;
@@ -158,33 +149,8 @@ Profile
           return;
       }
     })
-    .catch(error => {
-      console.error('There was a problem with the fetch operation:', error);
-    });
-
-  function formatDate(time){
-    const input = "2024-06-25T00:00:00Z";
-
-    // Parse the input string into a Date object
-    const date = new Date(input);
-
-    // Define arrays for month names and zero-padding for formatting
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const pad = (num) => num.toString().padStart(2, '0');
-
-    // Extract date components
-    const day = pad(date.getDate());
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    const seconds = pad(date.getSeconds());
-
-    // Format the date
-    const formattedDate = `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-
-    return formattedDate
-
-  }
+  .catch(error => {
+    console.error('There was a problem with the fetch operation:', error);
+  });
 </script>
 {{end}}

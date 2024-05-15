@@ -34,7 +34,25 @@
   <!-- Custom CSS -->
   {{block "css" .}}{{end}}
   <!-- /Custom CSS -->
+  <style>
+    /* Define the styles for the buttons */
+    .sidebar-footer a {
+        color: #333;
+        text-decoration: none;
+        display: inline-block;
+        padding: 5px;
+    }
 
+    /* Define the transition for color change */
+    .sidebar-footer a span {
+        transition: color .5s ease;
+    }
+
+    /* Define the styles for the buttons when hovered over */
+    .sidebar-footer a:hover span {
+        color: #FF5733; /* Change color on hover */
+    }
+</style>
 </head>
 
 <body class="nav-md footer_fixed">
@@ -51,7 +69,7 @@
           <!-- menu profile quick info -->
           <div class="profile clearfix">
             <div class="profile_pic">
-              <img src="/admin/images/{{.User.ImageLink}}" alt="..." class="img-circle profile_img">
+              <a href="/admin/general/profile/view-profile-info"><img src="/admin/images/{{.User.ImageLink}}" alt="..." class="img-circle profile_img"></a>
             </div>
             <div class="profile_info">
               <span>Welcome,</span>
@@ -70,7 +88,8 @@
                 <li><a href="#/admin/dashboard"><i class="fa fa-shield"></i> Admin <span
                       class="fa fa-chevron-down"></span></a>
                   <ul class="nav child_menu">
-                    <li><a href="#/admin/dashboard/profile/view-profile-info">Profile</a></li>
+                    <li><a href="/admin/dashboard">Dashboard</a></li>
+                    <li><a href="/admin/general/profile/view-profile-info">Profile</a></li>
                     <li><a href="#/admin/dashboard/profile/view-task">Task</a></li>
                   </ul>
                 </li>
@@ -89,12 +108,6 @@
                     <li><a href="#/admin/stocks/view-stock">View Stock</a></li>
                   </ul>
                 </li>
-                <!-- <li><a><i class="fa fa-bar-chart-o"></i> Stock Controller <span class="fa fa-chevron-down"></span></a>
-                    <ul class="nav child_menu">
-                      <li><a href="/admin/dashboard">Add To Stocks</a></li>
-                      <li><a href="/admin/analytics/view-stock">View Stock</a></li>
-                    </ul>
-                  </li> -->
               </ul>
             </div>
             <div class="menu_section">
@@ -104,7 +117,7 @@
                   <ul class="nav child_menu">
                     <li><a href="/admin/analytics/order/view/all">All Sales</a></li>
                     <li><a href="/admin/analytics/order/view/completed">Completed</a></li>
-                    <li><a href="/admin/analytics/order/view/refunded">Refunded</a></li>
+                    <li><a href="/admin/analytics/order/view/processing">Processing</a></li>
                     <li><a href="/admin/analytics/order/view/cancelled">Cancelled</a></li>
                   </ul>
                 </li>
@@ -182,10 +195,10 @@
             <a data-toggle="tooltip" data-placement="top" title="Settings">
               <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
             </a>
-            <a data-toggle="tooltip" data-placement="top" title="FullScreen">
-              <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
+            <a data-toggle="tooltip" data-placement="top" title="FullScreen" onclick="toggleFullScreen()">
+              <span id="screen-icon" class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
             </a>
-            <a href="/" data-toggle="tooltip" data-placement="top" title="Lock">
+            <a href="/" data-toggle="tooltip" data-placement="top" title="Public Site">
               <span class="glyphicon glyphicon-globe" aria-hidden="true"></span>
             </a>
             <a data-toggle="tooltip" data-placement="top" title="Logout" href="/signout">
@@ -213,7 +226,7 @@
                   <span class=" fa fa-angle-down"></span>
                 </a>
                 <ul class="dropdown-menu dropdown-usermenu pull-right">
-                  <li><a href="javascript:;"> Profile</a></li>
+                  <li><a href="/admin/general/profile/view-profile-info"> Profile</a></li>
                   <li>
                     <a href="javascript:;">
                       <span class="badge bg-red pull-right">50%</span>
@@ -351,6 +364,7 @@
   <script src="/admin/vendors/validator/validator.js"></script>
   <!-- Custom Theme Scripts -->
   <script src="/admin/build/js/custom.min.js"></script>
+  <script src="/admin/build/js/app.js"></script>
 
   <script>
     function signout() {
@@ -386,9 +400,28 @@
           })
       }
     }
-  </script>
-  </script>
+    function goBack() {
+      window.location.href = document.referrer;
+    }
 
+    function toggleFullScreen() {
+      let toggleBtn = document.getElementById("screen-icon")
+      if (!document.fullscreenElement) {
+        toggleBtn.classList.remove("glyphicon-fullscreen");
+        toggleBtn.classList.add("glyphicon-resize-small");
+        document.documentElement.requestFullscreen().catch(err => {
+          console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          toggleBtn.classList.remove("glyphicon-resize-small");
+          toggleBtn.classList.add("glyphicon-fullscreen");
+          document.exitFullscreen();
+        }
+      }
+    }
+  </script>
+  
   <!-- Custom JS -->
   {{block "js" .}}{{end}}
   <!-- /Custom CSS -->

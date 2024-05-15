@@ -1,1 +1,1 @@
-drop_column("dates", "iamge")
+drop_column("dates", "image")

@@ -9,14 +9,19 @@ type DatabaseRepo interface {
 
 	//Customer
 	InsertCustomer(customer models.Customer) (int, error)
-	//TODO: 
+	//TODO:
 	// GetCustomerDetails(id string) ([]*models.Customer, error)
 
 	//Order
 	GetOrdersHistory(statusType string) ([]*models.Order, error)
-	
+	GetOrdersHistoryPaginated(statusType string, pageSize, currentPageIndex int) ([]*models.Order, int, error)
+	UpdateOrderStatusID(id, statusID int) error
+
 	//Transaction
 	GetTransactionsHistory(statusType string) ([]*models.Transaction, error)
+	GetTransactionsHistoryPaginated(statusType string, pageSize, currentPageIndex int) ([]*models.Transaction, int, error)
+	UpdateTransactionStatusID(id, statusID int) error
+
 	//User
 	GetUserDetails(index, paramType string) (models.User, error)
 	UpdatePasswordByUserID(id, newPassword string) error

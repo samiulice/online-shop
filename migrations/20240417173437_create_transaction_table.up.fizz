@@ -9,6 +9,10 @@ create_table("transactions") {
     t.Column("transaction_status_id", "integer", {})
     t.Column("expiry_month", "integer", {"default":0})
     t.Column("expiry_year", "integer", {"default":0})
-    t.Column("created_at", "date", {})
-    t.Column("updated_at", "date", {})
+    t.Column("created_at", "timestamptz", {})
+    t.Column("updated_at", "timestamptz", {})
+    t.ForeignKey("transaction_status_id", {"transaction_status": ["id"]}, {
+        "on_delete": "cascade",
+        "on_update": "cascade",
+    })
 }

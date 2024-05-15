@@ -42,6 +42,9 @@ func (app *application) routes() http.Handler {
 		mux.Get("/virtual-terminal", app.VirtualTerminal)
 		mux.Get("/dashboard", app.AdminDashboard)
 
+		//routes for general >> Admin
+		mux.Get("/general/profile/view-profile-info", app.AdminViewProfile)
+
 		//routes for business analytics >> order
 		mux.Get("/analytics/order/view/{id}", app.AdminOrderHistoy)
 
@@ -50,6 +53,9 @@ func (app *application) routes() http.Handler {
 
 		//routes for customer management >> view >> profile
 		mux.Get("/customer/profile/view/{id}", app.AdminViewCustomerProfile)
+		
+		//404 not found route
+		mux.NotFound(app.PageNotFound)
 
 		//Admin file server
 		publicFileServer := http.FileServer(http.Dir("./"))

@@ -6,7 +6,7 @@ create_table("orders") {
     t.Column("status_id", "integer", {})
     t.Column("quantity", "integer", {})
     t.Column("amount", "integer", {})
-    t.Column("created_at", "date", {})
-    t.Column("updated_at", "date", {})
+    t.Column("created_at", "timestamptz", {})
+    t.Column("updated_at", "timestamptz", {})
 }
 

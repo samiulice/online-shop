@@ -31,8 +31,8 @@ CREATE TABLE public.customers (
     email character varying(255) DEFAULT ''::character varying NOT NULL,
     image_link character varying(255) DEFAULT ''::character varying NOT NULL,
     account_status integer DEFAULT 1 NOT NULL,
-    created_at date NOT NULL,
-    updated_at date NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
 );
 
 
@@ -76,8 +76,8 @@ CREATE TABLE public.dates (
     package_price integer NOT NULL,
     stock_level integer NOT NULL,
     image_link character varying(255) DEFAULT ''::character varying NOT NULL,
-    created_at date NOT NULL,
-    updated_at date NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
     image character varying(255) DEFAULT ''::character varying NOT NULL
 );
 
@@ -118,8 +118,8 @@ CREATE TABLE public.orders (
     status_id integer NOT NULL,
     quantity integer NOT NULL,
     amount integer NOT NULL,
-    created_at date NOT NULL,
-    updated_at date NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
 );
 
 
@@ -178,8 +178,8 @@ ALTER TABLE public.sessions OWNER TO postgres;
 CREATE TABLE public.status (
     id integer NOT NULL,
     name character varying(255) DEFAULT ''::character varying NOT NULL,
-    created_at date NOT NULL,
-    updated_at date NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
 );
 
 
@@ -254,8 +254,8 @@ ALTER SEQUENCE public.tokens_id_seq OWNED BY public.tokens.id;
 CREATE TABLE public.transaction_status (
     id integer NOT NULL,
     name character varying(255) DEFAULT ''::character varying NOT NULL,
-    created_at date NOT NULL,
-    updated_at date NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
 );
 
 
@@ -298,8 +298,8 @@ CREATE TABLE public.transactions (
     transaction_status_id integer NOT NULL,
     expiry_month integer DEFAULT 0 NOT NULL,
     expiry_year integer DEFAULT 0 NOT NULL,
-    created_at date NOT NULL,
-    updated_at date NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
 );
 
 
@@ -339,8 +339,8 @@ CREATE TABLE public.users (
     email character varying(255) DEFAULT ''::character varying NOT NULL,
     password character varying(255) DEFAULT ''::character varying NOT NULL,
     image_link character varying(255) DEFAULT ''::character varying NOT NULL,
-    created_at date NOT NULL,
-    updated_at date NOT NULL
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
 );
 
 
@@ -524,6 +524,30 @@ CREATE INDEX sessions_expiry_idx ON public.sessions USING btree (expiry);
 
 ALTER TABLE ONLY public.orders
     ADD CONSTRAINT orders_customers_id_fk FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: orders orders_status_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_status_id_fk FOREIGN KEY (status_id) REFERENCES public.status(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: orders orders_transactions_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_transactions_id_fk FOREIGN KEY (transaction_id) REFERENCES public.transactions(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: transactions transactions_transaction_status_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.transactions
+    ADD CONSTRAINT transactions_transaction_status_id_fkey FOREIGN KEY (transaction_status_id) REFERENCES public.transaction_status(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

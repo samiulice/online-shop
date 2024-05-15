@@ -168,12 +168,22 @@ func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 
 	if statusType == "all" {
 		query = query + trails
-	} else if statusType == "completed" {
+	} else if statusType == "processing" {
 		query = query + ` WHERE o.status_id = 1` + trails
-	} else if statusType == "refunded" {
+	} else if statusType == "completed" {
 		query = query + ` WHERE o.status_id = 2` + trails
 	} else if statusType == "cancelled" {
 		query = query + ` WHERE o.status_id = 3` + trails
+	} else if statusType == "pending" {
+		query = query + ` WHERE t.transaction_status_id = 1` + trails
+	} else if statusType == "cleared" {
+		query = query + ` WHERE t.transaction_status_id = 2` + trails
+	} else if statusType == "declined" {
+		query = query + ` WHERE t.transaction_status_id = 3` + trails
+	} else if statusType == "refunded" {
+		query = query + ` WHERE t.transaction_status_id = 4` + trails
+	} else if statusType == "partially-refunded" {
+		query = query + ` WHERE t.transaction_status_id = 5` + trails
 	} else if statusType == "one-off" {
 		query = query + ` WHERE d.is_recurring = 0` + trails
 	} else if statusType == "subscriptions" {
@@ -249,6 +259,169 @@ func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 	return orders, nil
 }
 
+func (m *postgresDBRepo) GetOrdersHistoryPaginated(statusType string, pageSize, currentPageIndex int) ([]*models.Order, int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	offset := (currentPageIndex - 1) * pageSize
+
+	var orders []*models.Order
+
+	query := `
+		SELECT 
+			o.id, o.dates_id, o.transaction_id, o.customer_id, o.status_id, o.quantity,
+			o.amount, o.created_at, o.updated_at, d.id, d.name, d.description, d.is_recurring,
+			d.plan_id, d.plan_title, d.plan_description, d.package_weight, d.package_price,
+			d.stock_level, d.image_link, d.created_at, d.updated_at, t.id, t.amount, t.currency,
+			t.payment_intent, payment_method, t.last_four_digits, t.bank_return_code, 
+			t.transaction_status_id, t.expiry_month, t.expiry_year, t.created_at, t.updated_at,
+			 ts.name, c.id, c.first_name, c.last_name, c.email, c.image_link, c.created_at, c.updated_at
+		FROM
+			orders o
+			LEFT JOIN dates d on (o.dates_id = d.id)
+			LEFT JOIN transactions t on (o.transaction_id = t.id)
+			LEFT JOIN transaction_status ts on (t.transaction_status_id = ts.id)
+			LEFT JOIN customers c on (o.customer_id = c.id)
+		`
+
+	trails := `
+		 ORDER BY
+			t.id asc
+		LIMIT $1 OFFSET $2
+		`
+
+	newQuery := `
+		SELECT 
+			COUNT(o.id)
+		FROM
+			orders o
+			LEFT JOIN dates d on (o.dates_id = d.id)
+			LEFT JOIN transactions t on (o.transaction_id = t.id)
+			LEFT JOIN transaction_status ts on (t.transaction_status_id = ts.id)
+			LEFT JOIN customers c on (o.customer_id = c.id)
+		`
+	var rows *sql.Rows
+	var err error
+
+	if statusType == "all" {
+		query = query + trails
+	} else if statusType == "processing" {
+		query = query + ` WHERE o.status_id = 1` + trails
+		newQuery = newQuery + ` WHERE o.status_id = 1`
+	} else if statusType == "completed" {
+		query = query + ` WHERE o.status_id = 2` + trails
+		newQuery = newQuery + ` WHERE o.status_id = 2`
+	} else if statusType == "cancelled" {
+		query = query + ` WHERE o.status_id = 3` + trails
+		newQuery = newQuery + ` WHERE o.status_id = 3`
+	} else if statusType == "pending" {
+		query = query + ` WHERE t.transaction_status_id = 1` + trails
+		newQuery = newQuery + ` WHERE t.transaction_status_id = 1`
+	} else if statusType == "cleared" {
+		query = query + ` WHERE t.transaction_status_id = 2` + trails
+		newQuery = newQuery + ` WHERE t.transaction_status_id = 2`
+	} else if statusType == "declined" {
+		query = query + ` WHERE t.transaction_status_id = 3` + trails
+		newQuery = newQuery + ` WHERE t.transaction_status_id = 3`
+	} else if statusType == "refunded" {
+		query = query + ` WHERE t.transaction_status_id = 4` + trails
+		newQuery = newQuery + ` WHERE t.transaction_status_id = 4`
+	} else if statusType == "partially-refunded" {
+		query = query + ` WHERE t.transaction_status_id = 5` + trails
+		newQuery = newQuery + ` WHERE t.transaction_status_id = 5`
+	} else if statusType == "one-off" {
+		query = query + ` WHERE d.is_recurring = 0` + trails
+		newQuery = newQuery + ` WHERE d.is_recurring = 0`
+	} else if statusType == "subscriptions" {
+		query = query + ` WHERE d.is_recurring = 1` + trails
+		newQuery = newQuery + ` WHERE d.is_recurring = 1`
+	}
+
+	rows, err = m.DB.QueryContext(ctx, query, pageSize, offset)
+	if err != nil {
+		return orders, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var o models.Order
+		err = rows.Scan(
+			&o.ID,
+			&o.DatesID,
+			&o.TransactionID,
+			&o.CustomerID,
+			&o.StatusID,
+			&o.Quantity,
+			&o.Amount,
+			&o.CreatedAt,
+			&o.UpdatedAt,
+
+			&o.Dates.ID,
+			&o.Dates.Name,
+			&o.Dates.Description,
+			&o.Dates.IsRecurring,
+			&o.Dates.PlanID,
+			&o.Dates.PlanTitle,
+			&o.Dates.PlanDescription,
+			&o.Dates.PackageWeight,
+			&o.Dates.PackagePrice,
+			&o.Dates.StockLevel,
+			&o.Dates.ImageLink,
+			&o.Dates.CreatedAt,
+			&o.Dates.UpdatedAt,
+
+			&o.Transaction.ID,
+			&o.Transaction.Amount,
+			&o.Transaction.Currency,
+			&o.Transaction.PaymentIntent,
+			&o.Transaction.PaymentMethod,
+			&o.Transaction.LastFourDigits,
+			&o.Transaction.BankReturnCode,
+			&o.Transaction.TransactionStatusID,
+			&o.Transaction.ExpiryMonth,
+			&o.Transaction.ExpiryYear,
+			&o.Transaction.CreatedAt,
+			&o.Transaction.UpdatedAt,
+			&o.Transaction.TransactionStatus,
+
+			&o.Customer.ID,
+			&o.Customer.FirstName,
+			&o.Customer.LastName,
+			&o.Customer.Email,
+			&o.Customer.ImageLink,
+			&o.Customer.CreatedAt,
+			&o.Customer.UpdatedAt,
+		)
+		if err != nil {
+			return orders, 0, err
+		}
+		orders = append(orders, &o)
+	}
+
+	var totalRecords int
+	countRow := m.DB.QueryRowContext(ctx, newQuery)
+	err = countRow.Scan(&totalRecords)
+	if err != nil {
+		return orders, 0, err
+	}
+	return orders, totalRecords, nil
+}
+
+func (m *postgresDBRepo) UpdateOrderStatusID(id, statusID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `
+		UPDATE orders
+		SET status_id = $1, updated_at = $2
+		WHERE id = $3
+	`
+
+	_, err := m.DB.ExecContext(ctx, stmt, statusID, time.Now(), id)
+
+	return err
+}
+
 // Database Functions that is related to Order processing activity
 // GetOrdersHistory returns a slice of all orders with associated customer and transaction info.
 //if statusType == all, it will return list all orders
@@ -265,7 +438,7 @@ func (m *postgresDBRepo) GetTransactionsHistory(statusType string) ([]*models.Tr
 	query := `
 		SELECT 
 			t.id, t.amount, t.currency, t.payment_intent, t.payment_method,
-			t.last_four_digits, t.bank_return_code, t.expiry_month, t.expiry_year,
+			t.last_four_digits, t.bank_return_code, t.transaction_status_id, t.expiry_month, t.expiry_year,
 			t.created_at, t.updated_at, ts.name
 		FROM
 			transactions t
@@ -281,7 +454,6 @@ func (m *postgresDBRepo) GetTransactionsHistory(statusType string) ([]*models.Tr
 
 	if statusType == "all" {
 		query = query + trails
-
 	} else if statusType == "pending" {
 		query = query + ` WHERE t.transaction_status_id = 1` + trails
 	} else if statusType == "cleared" {
@@ -312,6 +484,7 @@ func (m *postgresDBRepo) GetTransactionsHistory(statusType string) ([]*models.Tr
 			&t.PaymentMethod,
 			&t.LastFourDigits,
 			&t.BankReturnCode,
+			&t.TransactionStatusID,
 			&t.ExpiryMonth,
 			&t.ExpiryYear,
 			&t.CreatedAt,
@@ -326,6 +499,108 @@ func (m *postgresDBRepo) GetTransactionsHistory(statusType string) ([]*models.Tr
 
 	// return orders, errors.New("testing errors")
 	return transactions, nil
+}
+func (m *postgresDBRepo) GetTransactionsHistoryPaginated(statusType string, pageSize, currentPageIndex int) ([]*models.Transaction, int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	offset := (currentPageIndex - 1) * pageSize
+	var transactions []*models.Transaction
+
+	query := `
+		SELECT 
+			t.id, t.amount, t.currency, t.payment_intent, t.payment_method,
+			t.last_four_digits, t.bank_return_code, t.transaction_status_id, t.expiry_month, t.expiry_year,
+			t.created_at, t.updated_at, ts.name
+		FROM
+			transactions t
+			LEFT JOIN transaction_status ts on (t.transaction_status_id = ts.id)
+		`
+
+	trails := `
+		 ORDER BY
+			t.id asc
+		LIMIT $1 OFFSET $2`
+	newQuery := `
+	SELECT 
+		COUNT(t.id)
+	FROM
+		transactions t
+		LEFT JOIN transaction_status ts on (t.transaction_status_id = ts.id)
+	`
+	var rows *sql.Rows
+	var err error
+
+	if statusType == "all" {
+		query = query + trails
+	} else if statusType == "pending" {
+		query += ` WHERE t.transaction_status_id = 1` + trails
+		newQuery += ` WHERE t.transaction_status_id = 1`
+	} else if statusType == "cleared" {
+		query += ` WHERE t.transaction_status_id = 2` + trails
+		newQuery += ` WHERE t.transaction_status_id = 2`
+	} else if statusType == "declined" {
+		query += ` WHERE t.transaction_status_id = 3` + trails
+		newQuery += ` WHERE t.transaction_status_id = 3`
+	} else if statusType == "refunded" {
+		query += ` WHERE t.transaction_status_id = 4` + trails
+		newQuery += ` WHERE t.transaction_status_id = 4`
+	} else if statusType == "partially-refunded" {
+		query += ` WHERE t.transaction_status_id = 5` + trails
+		newQuery += ` WHERE t.transaction_status_id = 5`
+	}
+
+	rows, err = m.DB.QueryContext(ctx, query, pageSize, offset)
+	if err != nil {
+		return transactions, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var t models.Transaction
+		err = rows.Scan(
+			&t.ID,
+			&t.Amount,
+			&t.Currency,
+			&t.PaymentIntent,
+			&t.PaymentMethod,
+			&t.LastFourDigits,
+			&t.BankReturnCode,
+			&t.TransactionStatusID,
+			&t.ExpiryMonth,
+			&t.ExpiryYear,
+			&t.CreatedAt,
+			&t.UpdatedAt,
+			&t.TransactionStatus,
+		)
+		if err != nil {
+			return transactions, 0, err
+		}
+		transactions = append(transactions, &t)
+	}
+
+	var totalRecords int
+	countRow := m.DB.QueryRowContext(ctx, newQuery)
+	err = countRow.Scan(&totalRecords)
+	if err != nil {
+		return transactions, 0, err
+	}
+	return transactions, totalRecords, nil
+}
+
+// UpdateTransactionStatus update the status id for a transaction
+func (m *postgresDBRepo) UpdateTransactionStatusID(id, statusID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `
+		UPDATE transactions
+		SET transaction_status_id = $1, updated_at = $2
+		WHERE id = $3
+	`
+
+	_, err := m.DB.ExecContext(ctx, stmt, statusID, time.Now(), id)
+
+	return err
 }
 
 // Database Functions that relates to User Account activity

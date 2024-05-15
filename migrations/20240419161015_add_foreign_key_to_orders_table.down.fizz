@@ -1,1 +1,3 @@
 drop_foreign_key("orders", "customer_id", {"if_exists": true})
+drop_foreign_key("orders", "status_id", {"if_exists": true})
+drop_foreign_key("orders", "transaction_id", {"if_exists": true})

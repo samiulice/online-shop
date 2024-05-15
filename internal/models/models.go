@@ -46,7 +46,7 @@ type Order struct {
 	DatesID       int         `json:"dates_id"`
 	TransactionID int         `json:"transaction_id"`
 	CustomerID    int         `json:"customer_id"`
-	StatusID      int         `json:"status_id"`
+	StatusID      int         `json:"status_id"` //Processing=1, Completed=2, Cancelled = 3
 	Quantity      int         `json:"quantity"`
 	Amount        int         `json:"amount"`
 	CreatedAt     time.Time   `json:"-"`
@@ -81,12 +81,12 @@ type Transaction struct {
 	PaymentMethod       string    `json:"payment_method"`
 	LastFourDigits      string    `json:"last_four_digits"`
 	BankReturnCode      string    `json:"bank_return_code"`
-	TransactionStatusID int       `json:"transaction_status_id"`
+	TransactionStatusID int       `json:"transaction_status_id"` //Pending=1, Cleared=2, Declined=3 Refunded=4, Partially Refunded=5
 	ExpiryMonth         int       `json:"expiry_month"`
 	ExpiryYear          int       `json:"expiry_year"`
 	CreatedAt           time.Time `json:"created_at"`
 	UpdatedAt           time.Time `json:"updated_at"`
-	TransactionStatus string `json:"transaction_status"`
+	TransactionStatus   string    `json:"transaction_status"`
 }
 
 // TransactionData is the type for all transaction
@@ -121,12 +121,12 @@ type User struct {
 
 // Customer is the type for users
 type Customer struct {
-	ID        int       `json:"id"`
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
-	Email     string    `json:"email"`
-	ImageLink string    `json:"image_link"` //username_profile_id_yy-mm-dd_hh-mm-ss.jpf
-	AccountStatus int `json:"account_status"` //0 = deleted, 1 = active, 2 = deactivated 
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID            int       `json:"id"`
+	FirstName     string    `json:"first_name"`
+	LastName      string    `json:"last_name"`
+	Email         string    `json:"email"`
+	ImageLink     string    `json:"image_link"`     //username_profile_id_yy-mm-dd_hh-mm-ss.jpf
+	AccountStatus int       `json:"account_status"` //0 = deleted, 1 = active, 2 = deactivated
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }

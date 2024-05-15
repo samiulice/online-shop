@@ -1,0 +1,78 @@
+{{template "admin" .}}
+
+{{define "title"}}
+{{printf "%s %s" (titleCase .User.FirstName) (titleCase .User.LastName)}}
+{{end}}
+
+{{define "content"}}
+<div class="">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="x_panel">
+        <div class="x_content">
+          <div class="row" id="parent">
+            <div class="clearfix"></div>
+            <div class="col-md-8 col-sm-12 col-xs-12 profile_details">
+              <div class="well profile_view">
+                <div class="col-sm-12">
+                  <div class="left col-xs-7">
+                    <h3 class="text-center">{{printf "%s %s" (titleCase .User.FirstName) (titleCase .User.LastName)}}</h3>
+                    <hr>
+                    <p><strong>About: </strong> Backend Engineer/Golang. </p>
+                    <br>
+                    <div class="left col-xs-5">
+                      <ul class="list-unstyled">
+                        <li><i class="fa fa-info-circle"></i> Admin ID:</li>
+                        <li><i class="fa fa-location-arrow"></i> Address:</li>
+                        <li><i class="fa fa-envelope"></i> Email:</b></li>
+                        <li><i class="fa fa-phone"></i> Phone #:</li>
+                        <li><i class="fa fa-clock-o"></i> Created At:</li>
+                        <li><i class="fa fa-clock-o"></i> Upadeted At:</li>
+                      </ul>
+                    </div>
+                    <div class="left col-xs-7">
+                      <ul class="list-unstyled">
+                        <li><b>{{.User.ID}}</b></li>
+                        <li><b class="text-danger">Update later</b></li>
+                        <li><b>{{.User.Email}}</b></li>
+                        <li><b class="text-danger">Update later</b></li>
+                        <li><b>{{formatDate .User.CreatedAt "Mon, 02 Jan 2006 15:04:05 MST"}}</b></li>
+                        <li><b>{{formatDate .User.UpdatedAt "Mon, 02 Jan 2006 15:04:05 MST"}}</b></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="right col-xs-5 text-center">
+                    <img src="/admin/images/{{if eq .User.ImageLink ""}}user.png{{else}}{{.User.ImageLink}}{{end}}" alt="profile picture"
+                      class="img-container img-circle img-responsive">
+                  </div>
+                </div>
+                <div class="col-xs-12 bottom text-center">
+                  <div class="col-xs-12 col-sm-6 emphasis">
+                    <p class="ratings">
+                      <a>4.0</a>
+                      <a href="#"><span class="fa fa-star"></span></a>
+                      <a href="#"><span class="fa fa-star"></span></a>
+                      <a href="#"><span class="fa fa-star"></span></a>
+                      <a href="#"><span class="fa fa-star"></span></a>
+                      <a href="#"><span class="fa fa-star-o"></span></a>
+                    </p>
+                  </div>
+                  <div class="col-xs-12 col-sm-6 emphasis">
+                    <a onclick="goBack()" class="btn btn-dark btn-xs">
+                      <i class="fa fa-backward"></i> Back
+                    </a>              
+                    <a href="/admin/profile/edit/{{$.User.ID}}" class="btn btn-warning btn-xs"> <i
+                        class="fa fa-user">
+                      </i> <i class="fa fa-comments-o"></i> Edit
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}

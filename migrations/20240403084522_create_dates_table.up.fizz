@@ -10,6 +10,6 @@ create_table("dates") {
     t.Column("package_price", "integer", {})
     t.Column("stock_level", "integer", {})
     t.Column("image_link", "string", {"default": ""})
-    t.Column("created_at", "date", {})
-    t.Column("updated_at", "date", {})
+    t.Column("created_at", "timestamptz", {})
+    t.Column("updated_at", "timestamptz", {})
 }

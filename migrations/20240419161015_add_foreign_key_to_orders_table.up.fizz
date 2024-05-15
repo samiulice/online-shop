@@ -2,3 +2,11 @@ add_foreign_key("orders", "customer_id", {"customers": ["id"]}, {
     "on_delete": "cascade",
     "on_update": "cascade",
 })
+add_foreign_key("orders", "status_id", {"status": ["id"]}, {
+    "on_delete": "cascade",
+    "on_update": "cascade",
+})
+add_foreign_key("orders", "transaction_id", {"transactions": ["id"]}, {
+    "on_delete": "cascade",
+    "on_update": "cascade",
+})

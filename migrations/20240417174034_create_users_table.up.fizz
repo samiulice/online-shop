@@ -6,6 +6,6 @@ create_table("users") {
     t.Column("email", "string", {"default": ""})
     t.Column("password", "string", {"default": ""})
     t.Column("image_link", "string", {"default": ""})
-    t.Column("created_at", "date", {})
-    t.Column("updated_at", "date", {})
+    t.Column("created_at", "timestamptz", {})
+    t.Column("updated_at", "timestamptz", {})
 }

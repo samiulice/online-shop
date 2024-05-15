@@ -353,6 +353,12 @@ func (app *application) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Println(err)
 	}
 }
+func (app *application) AdminViewProfile(w http.ResponseWriter, r *http.Request) {
+	user := app.Session.Get(r.Context(), "user").(models.User)
+	if err := app.renderTemplate(w, r, "admin-view-profile", &templateData{User: user}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
 
 // AdminSalesHistoy renders various sales history
 func (app *application) AdminOrderHistoy(w http.ResponseWriter, r *http.Request) {
@@ -362,12 +368,12 @@ func (app *application) AdminOrderHistoy(w http.ResponseWriter, r *http.Request)
 	data["history-type"] = t
 	user := app.Session.Get(r.Context(), "user").(models.User)
 	tmpl := ""
-	if (t == "all" || t == "completed" || t== "refunded" || t== "cancelled" || t== "one-off" || t== "subscriptions" ){
+	if (t == "all" || t == "completed" ||t == "processing" || t== "refunded" || t== "cancelled" || t== "one-off" || t== "subscriptions" ){
 		tmpl = "admin-orders-history"
 	} else if _,err := strconv.Atoi(t); err == nil {
 		tmpl = "admin-order-details"
 	} else {
-		app.errorLog.Println("Invlaid customer id")
+		app.errorLog.Println("Invlaid customer id: " , t)
 		http.Redirect(w, r, "/page-not-found", http.StatusNotFound)
 		return
 	}
@@ -388,10 +394,11 @@ func (app *application) AdminOrderHistoy(w http.ResponseWriter, r *http.Request)
 // and shows single customer profile details if last element is an int
 func (app *application) AdminViewCustomerProfile(w http.ResponseWriter, r *http.Request) {
 	id := path.Base(r.URL.Path)
+	tmpl := "admin-view-customer-profile-list"
 
 	data := make(map[string]interface{})
-	tmpl := "admin-view-customer-profile-list"
-	data["type"] = id
+	data["profile-type"] = id
+	
 	if id != "active" && id != "deactived" && id != "deleted" && id != "all" {
 		_, err := strconv.Atoi(id)
 		if err != nil {
@@ -415,28 +422,32 @@ func (app *application) AdminViewCustomerProfile(w http.ResponseWriter, r *http.
 // AdminViewTransaction renders list of transactions.
 // All transactions are listed, if last element of path is "all".
 // All refunded transactions are listed if last element of path is "refunded"
+// All partially-refunded transactions are listed if last element of path is "partially-refunded"
+// All pending transactions are listed if last element of path is "pending"
+// All declined transactions are listed if last element of path is "declined"
 // and shows single customer profile details if last element is an int
 func (app *application) AdminViewTransaction(w http.ResponseWriter, r *http.Request) {
-	id := path.Base(r.URL.Path)
-
+	t := path.Base(r.URL.Path)
 	data := make(map[string]interface{})
-	tmpl := "admin-show-transaction"
-	data["transaction_type"] = id
+	data["transaction_type"] = t
 	
-	if !(id == "all" || id == "pending" || id == "cleared" || id == "declined" || id == "refunded" || id == "partially-refunded") {
-		_, err := strconv.Atoi(id)
-		if err != nil {
-			app.errorLog.Println("Invlaid customer id")
-			http.Redirect(w, r, "/page-not-found", http.StatusNotFound)
-			return
-		}
+	tmpl := ""
+	if (t == "all" || t == "pending" || t == "cleared" || t== "declined" || t== "refunded" || t== "partially-refunded"){
+		tmpl = "admin-transaction-history"
+	} else if _,err := strconv.Atoi(t); err == nil {
+		tmpl = "admin-transaction-details"
+	} else {
+		app.errorLog.Println("Invlaid customer id: " , t)
+		http.Redirect(w, r, "/page-not-found", http.StatusNotFound)
+		return
 	}
-
+	
 	user := app.Session.Get(r.Context(), "user").(models.User)
-	if err := app.renderTemplate(w, r, tmpl, &templateData{
+	err := app.renderTemplate(w, r, tmpl, &templateData{
 		User: user,
 		Data: data,
-	}); err != nil {
+	})
+	if err != nil {
 		app.errorLog.Println(err)
 	}
 }
