@@ -4,25 +4,6 @@ import (
 	"time"
 )
 
-// DBModel is the type for database connection values
-// type DBModel struct {
-// 	DB *sql.DB
-// }
-
-// Models is the wrapper for all models
-// type Models struct {
-// 	DB DBModel
-// }
-
-// NewModels returns Models type with database connection pool. It is used to make new Models struct in any part of tha application
-// func NewModels(db *sql.DB) Models {
-// 	return Models{
-// 		DB: DBModel{
-// 			DB: db,
-// 		},
-// 	}
-// }
-
 // Date is the type for all dates that holds the info about it
 type Date struct {
 	ID              int       `json:"id"`
@@ -106,6 +87,40 @@ type TransactionData struct {
 	ExpiryYear     int    `json:"expiry_year"`
 }
 
+// Employee is the type for Employee
+type Employee struct {
+	ID              int            `json:"id"`
+	UserName        string         `json:"user_name"`
+	FirstName       string         `json:"first_name"`
+	LastName        string         `json:"last_name"`
+	Address        string         `json:"address"`
+	Email           string         `json:"email"`
+	FacebookID      string         `json:"fb_id"`
+	WhatsappID      string         `json:"whatsapp_id"`
+	TwitterID       string         `json:"x_id"`
+	LinkedinID      string         `json:"linkedin_id"`
+	GithubID        string         `json:"github_id"`
+	Mobile          string         `json:"mobile"`
+	Password        string         `json:"password"`
+	ImageLink       string         `json:"image_link"` //username_profile_id_yy-mm-dd_hh-mm-ss.jpg
+	AccountStatusID int            `json:"account_status_id"` //Active = 1, Suspended = 2, Resigned = 3, Ex= (2 or 3)
+	Credits         int            `json:"credits"`
+	TaskCompleted   int            `json:"task_completed"`
+	TaskCancelled   int            `json:"task_cancelled"`
+	Rating          int            `json:"rating"` //5*TaskCompleted/(TaskCompleted+TaskCancelled)
+	CreatedAt       time.Time      `json:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at"`
+	AccountStatus   EmployeeStatus `json:"account_status"`
+}
+
+type EmployeeStatus struct {
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 // User is the type for users
 type User struct {
 	ID        int       `json:"id"`
@@ -130,3 +145,22 @@ type Customer struct {
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
+
+// ................JSON Response model for invoice microservice........................
+// Order holds the necessary info to build invoice
+type Invoice struct {
+	ID        int              `json:"id"`
+	FirstName string           `json:"first_name"`
+	LastName  string           `json:"last_name"`
+	Email     string           `json:"email"`
+	CreatedAt time.Time        `json:"created_at"`
+	Items     []InvoiceProduct `json:"items"`
+}
+type InvoiceProduct struct {
+	ID       int    `json:"product_id"`
+	Name     string `json:"product_name"`
+	Quantity int    `json:"quantity"`
+	Amount   int    `json:"amount"`
+}
+
+//........................................................................................

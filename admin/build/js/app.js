@@ -85,3 +85,80 @@ function getMonthName(monthNumber) {
         return "Invalid month number";
     }
 }
+
+function checkError(data, callback){
+  if (data.message == "Invalid authentication credentials"){
+    console.log("not logged in");
+    signout();
+    return;
+  }
+  callback();
+  return;
+}
+
+function showErrorInTable(){
+  let newRow = tbody.insertRow();
+  let newCell = newRow.insertCell();
+
+  document.getElementById("row-actions").classList.add("d-none");
+  newRow.classList.add("text-center");
+
+  newCell = newRow.insertCell();
+  newCell.setAttribute('colspan', 7);
+  newCell.innerHTML = '<b style="color:rgb(255, 0, 76); width: 30%">Internal Server Error</b>';
+  return;
+}
+
+function signout() {
+  localStorage.removeItem("token")
+  localStorage.removeItem("token_expiry")
+  location.href = "/signout"
+}
+
+function checkAuth() {
+  if (localStorage.getItem("token") === null) {
+    location.href = "/signin"
+    return
+  } else {
+    let token = localStorage.getItem("token");
+    const myHeader = new Headers();
+    myHeader.append("Content-Type", "application/json");
+    myHeader.append("Authorization", "Bearer " + token);
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeader,
+    }
+
+    fetch("{{.API}}/api/is-authenticated", requestOptions)
+      .then(response => response.json())
+      .then(function (data) {
+        if (data.error === true) {
+          console.log("not logged in");
+          location.href = "/signin"
+        } else {
+          console.log("logged in");
+        }
+      })
+  }
+}
+function goBack() {
+  window.location.href = document.referrer;
+}
+
+function toggleFullScreen() {
+  let toggleBtn = document.getElementById("screen-icon")
+  if (!document.fullscreenElement) {
+    toggleBtn.classList.remove("glyphicon-fullscreen");
+    toggleBtn.classList.add("glyphicon-resize-small");
+    document.documentElement.requestFullscreen().catch(err => {
+      console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+    });
+  } else {
+    if (document.exitFullscreen) {
+      toggleBtn.classList.remove("glyphicon-resize-small");
+      toggleBtn.classList.add("glyphicon-fullscreen");
+      document.exitFullscreen();
+    }
+  }
+}

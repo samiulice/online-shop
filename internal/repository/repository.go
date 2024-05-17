@@ -22,6 +22,10 @@ type DatabaseRepo interface {
 	GetTransactionsHistoryPaginated(statusType string, pageSize, currentPageIndex int) ([]*models.Transaction, int, error)
 	UpdateTransactionStatusID(id, statusID int) error
 
+	//Employee
+	GetEmployeeByID(id int) (models.Employee, error)
+	GetEmployeeListPaginated(accountType string, pageSize, currentPageIndex int) ([]*models.Employee, int, error)
+	UpdateEmployeeAccountStatusByID(id, accountStatusID int) error
 	//User
 	GetUserDetails(index, paramType string) (models.User, error)
 	UpdatePasswordByUserID(id, newPassword string) error

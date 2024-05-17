@@ -107,6 +107,96 @@ ALTER SEQUENCE public.dates_id_seq OWNED BY public.dates.id;
 
 
 --
+-- Name: employee_status; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.employee_status (
+    id integer NOT NULL,
+    name character varying(255) DEFAULT ''::character varying NOT NULL,
+    description character varying(255) DEFAULT ''::character varying NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.employee_status OWNER TO postgres;
+
+--
+-- Name: employee_status_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.employee_status_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.employee_status_id_seq OWNER TO postgres;
+
+--
+-- Name: employee_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.employee_status_id_seq OWNED BY public.employee_status.id;
+
+
+--
+-- Name: employees; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.employees (
+    id integer NOT NULL,
+    user_name character varying(255) DEFAULT ''::character varying NOT NULL,
+    first_name character varying(255) DEFAULT ''::character varying NOT NULL,
+    last_name character varying(255) DEFAULT ''::character varying NOT NULL,
+    address character varying(255) DEFAULT ''::character varying NOT NULL,
+    email character varying(255) DEFAULT ''::character varying NOT NULL,
+    mobile character varying(255) DEFAULT ''::character varying NOT NULL,
+    fb_id character varying(255) DEFAULT ''::character varying NOT NULL,
+    whatsapp_id character varying(255) DEFAULT ''::character varying NOT NULL,
+    x_id character varying(255) DEFAULT ''::character varying NOT NULL,
+    linkedin_id character varying(255) DEFAULT ''::character varying NOT NULL,
+    github_id character varying(255) DEFAULT ''::character varying NOT NULL,
+    password character varying(255) DEFAULT ''::character varying NOT NULL,
+    image_link character varying(255) DEFAULT 'user.png'::character varying NOT NULL,
+    account_status_id integer DEFAULT 1 NOT NULL,
+    credits bigint DEFAULT '0'::bigint NOT NULL,
+    task_completed bigint DEFAULT '0'::bigint NOT NULL,
+    task_cancelled bigint DEFAULT '0'::bigint NOT NULL,
+    rating integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.employees OWNER TO postgres;
+
+--
+-- Name: employees_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.employees_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.employees_id_seq OWNER TO postgres;
+
+--
+-- Name: employees_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.employees_id_seq OWNED BY public.employees.id;
+
+
+--
 -- Name: orders; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -383,6 +473,20 @@ ALTER TABLE ONLY public.dates ALTER COLUMN id SET DEFAULT nextval('public.dates_
 
 
 --
+-- Name: employee_status id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.employee_status ALTER COLUMN id SET DEFAULT nextval('public.employee_status_id_seq'::regclass);
+
+
+--
+-- Name: employees id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.employees ALTER COLUMN id SET DEFAULT nextval('public.employees_id_seq'::regclass);
+
+
+--
 -- Name: orders id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -438,6 +542,22 @@ ALTER TABLE ONLY public.customers
 
 ALTER TABLE ONLY public.dates
     ADD CONSTRAINT dates_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employee_status employee_status_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.employee_status
+    ADD CONSTRAINT employee_status_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: employees employees_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.employees
+    ADD CONSTRAINT employees_pkey PRIMARY KEY (id);
 
 
 --
@@ -516,6 +636,14 @@ CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USIN
 --
 
 CREATE INDEX sessions_expiry_idx ON public.sessions USING btree (expiry);
+
+
+--
+-- Name: employees employees_account_status_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.employees
+    ADD CONSTRAINT employees_account_status_id_fkey FOREIGN KEY (account_status_id) REFERENCES public.employee_status(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

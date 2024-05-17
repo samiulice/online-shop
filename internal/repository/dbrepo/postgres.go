@@ -775,3 +775,148 @@ func (m *postgresDBRepo) GetCustomerProfile(index string) ([]*models.Customer, e
 	// return orders, errors.New("testing errors")
 	return customers, nil
 }
+
+// Database Functions that is related to Employee Account Activity
+// GetEmployeeDetails retrive detailed info about an employee
+func (m *postgresDBRepo) GetEmployeeByID(id int) (models.Employee, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var employee models.Employee
+
+	query := `
+		SELECT 
+			e.id, e.user_name, e.first_name, e.last_name, e.address, e.email, e.fb_id, e.whatsapp_id, e.x_id, e.linkedin_id, e.github_id, e.mobile, e.image_link, e.account_status_id,
+			e.credits, e.task_completed, e.task_cancelled, e.rating, e.created_at, e.updated_at, es.id, es.name, es.description
+		FROM
+			employees e
+			LEFT JOIN employee_status es on (e.account_status_id = es.id)
+		WHERE
+			e.id = $1
+		`
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&employee.ID,
+		&employee.UserName,
+		&employee.FirstName,
+		&employee.LastName,
+		&employee.Address,
+		&employee.Email,
+		&employee.FacebookID,
+		&employee.WhatsappID,
+		&employee.TwitterID,
+		&employee.LinkedinID,
+		&employee.GithubID,
+		&employee.Mobile,
+		&employee.ImageLink,
+		&employee.AccountStatusID,
+		&employee.Credits,
+		&employee.TaskCompleted,
+		&employee.TaskCancelled,
+		&employee.Rating,
+		&employee.CreatedAt,
+		&employee.UpdatedAt,
+		&employee.AccountStatus.ID,
+		&employee.AccountStatus.Name,
+		&employee.AccountStatus.Description,
+	)
+
+	return employee, err
+}
+
+// GetEmployeeListPaginated returns a chunks of employees
+// if accountType == all, it will return list all employee accounts
+// if accountType == active, it will return list of active employee accounts
+// if accountType == ex, it will return list of all ex-employee account
+// if accountType == suspended, it will return list of suspended employee's account
+// if accountType == resigned, it will return list of resigned employee's account
+func (m *postgresDBRepo) GetEmployeeListPaginated(accountType string, pageSize, currentPageIndex int) ([]*models.Employee, int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	offset := (currentPageIndex - 1) * pageSize
+	var employees []*models.Employee
+
+	query := `
+		SELECT 
+			e.id, e.first_name, e.last_name, e.mobile, e.account_status_id,
+			e.credits, e.rating, e.task_completed, e.created_at
+		FROM
+			employees e
+		`
+
+	trails := `
+		 ORDER BY
+			e.id asc
+		LIMIT $1 OFFSET $2`
+	newQuery := `
+	SELECT 
+		COUNT(e.id)
+	FROM
+		employees e
+	`
+	var rows *sql.Rows
+	var err error
+
+	if accountType == "all" {
+		query = query + trails
+	} else if accountType == "active" {
+		query += ` WHERE e.account_status_id = 1` + trails
+		newQuery += ` WHERE e.account_status_id = 1`
+	} else if accountType == "ex" {
+		query += ` WHERE e.account_status_id IN (2, 3)` + trails
+		newQuery += ` WHERE e.account_status_id IN (2, 3)`
+	} else if accountType == "suspended" {
+		query += ` WHERE e.account_status_id = 2` + trails
+		newQuery += ` WHERE e.account_status_id = 2`
+	} else if accountType == "resigned" {
+		query += ` WHERE e.account_status_id = 3` + trails
+		newQuery += ` WHERE e.account_status_id = 3`
+	} else {
+		return employees, 0, errors.New("please enter correct parameter to get employees list")
+	}
+
+	rows, err = m.DB.QueryContext(ctx, query, pageSize, offset)
+	if err != nil {
+		return employees, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var e models.Employee
+		err = rows.Scan(
+			&e.ID,
+			&e.FirstName,
+			&e.LastName,
+			&e.Mobile,
+			&e.AccountStatusID,
+			&e.Credits,
+			&e.Rating,
+			&e.TaskCompleted,
+			&e.CreatedAt,
+		)
+		if err != nil {
+			return employees, 0, err
+		}
+		employees = append(employees, &e)
+	}
+
+	var totalRecords int
+	countRow := m.DB.QueryRowContext(ctx, newQuery)
+	err = countRow.Scan(&totalRecords)
+	if err != nil {
+		return employees, 0, err
+	}
+	return employees, totalRecords, nil
+}
+//UpdateEmployeeAccountStatus updates the account status of an employee
+func (m *postgresDBRepo) UpdateEmployeeAccountStatusByID(id, accountStatusID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	stmt := `
+		UPDATE employees
+		SET account_status_id = $1, updated_at = $2
+		WHERE id = $3
+	`
+	_, err := m.DB.ExecContext(ctx, stmt, accountStatusID, time.Now(), id)
+	return err
+}

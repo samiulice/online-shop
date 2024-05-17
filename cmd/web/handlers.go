@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"online_store/internal/cards"
@@ -171,6 +173,33 @@ func (app *application) PaymentSucceeded(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	//Get product info
+	p, err := app.DB.GetDate(order.DatesID)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	//call invoice microservice to generate invoice template and send it to the customer email address
+	var product = models.InvoiceProduct{
+		ID:       order.DatesID,
+		Name:     p.Name,
+		Quantity: order.Quantity,
+		Amount:   order.Amount,
+	}
+	var items = []models.InvoiceProduct{product}
+	var inv = models.Invoice{
+		ID:        order.ID,
+		FirstName: c.FirstName,
+		LastName:  c.LastName,
+		Email:     c.Email,
+		CreatedAt: time.Now(),
+		Items:     items,
+	}
+	err = app.callInvoiceMicro(inv)
+	if err != nil {
+		app.errorLog.Println(err)
+	}
+	
 	//Saving receipt info to the session
 	app.Session.Put(r.Context(), "receipt", txnData)
 
@@ -353,9 +382,45 @@ func (app *application) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Println(err)
 	}
 }
+// AdminViewProfile renders admin profile page
 func (app *application) AdminViewProfile(w http.ResponseWriter, r *http.Request) {
 	user := app.Session.Get(r.Context(), "user").(models.User)
 	if err := app.renderTemplate(w, r, "admin-view-profile", &templateData{User: user}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+// AdminAddEmployee renders add admin page
+func (app *application) AdminAddEmployee(w http.ResponseWriter, r *http.Request) {
+	user := app.Session.Get(r.Context(), "user").(models.User)
+	if err := app.renderTemplate(w, r, "admin-add-employee", &templateData{User: user}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+// AdminEmployeeList renders employee list
+func (app *application) AdminViewEmployee(w http.ResponseWriter, r *http.Request) {
+	t := path.Base(r.URL.Path)
+
+	data := make(map[string]interface{})
+	data["employee-list-type"] = t
+	user := app.Session.Get(r.Context(), "user").(models.User)
+
+	tmpl := ""
+	if t == "active" || t == "ex" || t == "suspended" || t == "resigned" || t == "all" {
+		tmpl = "admin-employee-list"
+	} else if _, err := strconv.Atoi(t); err == nil {
+		tmpl = "admin-employee-details"
+	} else {
+		app.errorLog.Println("Invlaid customer id: ", t)
+		http.Redirect(w, r, "/page-not-found", http.StatusNotFound)
+		return
+	}
+
+	err := app.renderTemplate(w, r, tmpl, &templateData{
+		User: user,
+		Data: data,
+	})
+	if err != nil {
 		app.errorLog.Println(err)
 	}
 }
@@ -368,16 +433,16 @@ func (app *application) AdminOrderHistoy(w http.ResponseWriter, r *http.Request)
 	data["history-type"] = t
 	user := app.Session.Get(r.Context(), "user").(models.User)
 	tmpl := ""
-	if (t == "all" || t == "completed" ||t == "processing" || t== "refunded" || t== "cancelled" || t== "one-off" || t== "subscriptions" ){
-		tmpl = "admin-orders-history"
-	} else if _,err := strconv.Atoi(t); err == nil {
+	if t == "all" || t == "completed" || t == "processing" || t == "refunded" || t == "cancelled" || t == "one-off" || t == "subscriptions" {
+		tmpl = "admin-orders-list"
+	} else if _, err := strconv.Atoi(t); err == nil {
 		tmpl = "admin-order-details"
 	} else {
-		app.errorLog.Println("Invlaid customer id: " , t)
+		app.errorLog.Println("Invlaid customer id: ", t)
 		http.Redirect(w, r, "/page-not-found", http.StatusNotFound)
 		return
 	}
-	
+
 	err := app.renderTemplate(w, r, tmpl, &templateData{
 		User: user,
 		Data: data,
@@ -398,7 +463,7 @@ func (app *application) AdminViewCustomerProfile(w http.ResponseWriter, r *http.
 
 	data := make(map[string]interface{})
 	data["profile-type"] = id
-	
+
 	if id != "active" && id != "deactived" && id != "deleted" && id != "all" {
 		_, err := strconv.Atoi(id)
 		if err != nil {
@@ -430,18 +495,18 @@ func (app *application) AdminViewTransaction(w http.ResponseWriter, r *http.Requ
 	t := path.Base(r.URL.Path)
 	data := make(map[string]interface{})
 	data["transaction_type"] = t
-	
+
 	tmpl := ""
-	if (t == "all" || t == "pending" || t == "cleared" || t== "declined" || t== "refunded" || t== "partially-refunded"){
-		tmpl = "admin-transaction-history"
-	} else if _,err := strconv.Atoi(t); err == nil {
+	if t == "all" || t == "pending" || t == "cleared" || t == "declined" || t == "refunded" || t == "partially-refunded" {
+		tmpl = "admin-transactions-list"
+	} else if _, err := strconv.Atoi(t); err == nil {
 		tmpl = "admin-transaction-details"
 	} else {
-		app.errorLog.Println("Invlaid customer id: " , t)
+		app.errorLog.Println("Invlaid customer id: ", t)
 		http.Redirect(w, r, "/page-not-found", http.StatusNotFound)
 		return
 	}
-	
+
 	user := app.Session.Get(r.Context(), "user").(models.User)
 	err := app.renderTemplate(w, r, tmpl, &templateData{
 		User: user,
@@ -549,4 +614,28 @@ func (app *application) GetTransactionData(r *http.Request) (models.TransactionD
 	txnData.ExpiryYear = int(expiryYear)
 
 	return txnData, err
+}
+
+// callInvoiceMicro calls the invoice microservice to generate invoice and send it to the customer gmail
+func (app *application) callInvoiceMicro(inv models.Invoice) error {
+	url := "http://localhost:5000/invoice/generate-send"
+	out, err := json.MarshalIndent(inv, "", "\t")
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(out))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	return nil
 }

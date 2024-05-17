@@ -1,0 +1,385 @@
+{{template "admin" .}}
+
+{{define "title"}}
+Profile
+{{end}}
+
+{{define "css"}}
+<style>
+  .icon {
+    font-size: 24px; /* Adjust icon size */
+    margin: 10px;
+    margin-left: 0px;
+  }
+  .text-light{
+    color: aliceblue;
+  }
+</style>
+
+{{end}}
+
+{{define "content"}}
+
+<div class="">
+  <div class="row">
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="x_panel">
+        <div class="x_title">
+          <h2>User Report <small>Activity report</small></h2>
+          <div class="clearfix"></div>
+        </div>
+        <div class="x_content">
+          <div class="row">
+            <div class="col-md-3 col-sm-3 col-xs-3">
+              <a href="#" onclick="goBack()" class="btn btn-dark btn-xs">
+                </i><i class="fa fa-backward"></i> Back
+              </a>
+            </div>
+            <div id="controlBtn" class="col-md-9 col-sm-9 col-xs-9 text-right">
+              <!-- Will be updated by Javascript DOM -->
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 col-sm-4 col-xs-12 profile_left">
+              <div class="profile_img">
+                <div id="crop-avatar">
+                  <!-- will be updated by Javascript DOM -->
+                  <img id="employee_picture" class="img-circle img-responsive img-responsive avatar-view" height="240px"
+                    width="240px">
+                </div>
+              </div>
+              <h3 id="employee_name">
+                Samiul Islam
+                <!-- will be updated by Javascript DOM -->
+              </h3>
+
+              <ul class="h5 list-unstyled user_data">
+                <li id="employee_address"><span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span>
+                  Mogangonj, Netrakon, Mymensingh, Bangladesh
+                  <!-- will be updated by Javascript DOM -->
+                </li>
+
+                <li>
+                  <!-- will be updated by Javascript DOM -->
+                  <span class="badge bg-primary">
+                    <a class="text-light" id="employee_mobile">
+                      <span class="glyphicon glyphicon-phone" aria-hidden="true"></span>&nbsp;
+                    </a>
+                    <span id="employee_mobile_text"></span>
+                  </span>&nbsp;
+                  <span><a onclick="copyContent()"><i class="fa fa-copy"></i></a></span>
+                </li>
+                <li class="badge bg-primary">
+                  <!-- will be updated by Javascript DOM -->
+                  <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>&nbsp;
+                  <a class="text-light" id="employee_email">Send Email</a>
+                </li>
+              </ul>
+              <hr>
+              <div class="text-left" id="social_links">
+                <!-- will be updated by Javascript DOM -->
+              </div>
+
+              <!-- will be updated later -->
+              <!-- start skills -->
+              <!-- <h4>Skills</h4>
+                <ul class="list-unstyled user_data">
+                  <li>
+                    <p>Web Applications</p>
+                    <div class="progress progress_sm">
+                      <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="50"></div>
+                    </div>
+                  </li>
+                  <li>
+                    <p>Website Design</p>
+                    <div class="progress progress_sm">
+                      <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="70"></div>
+                    </div>
+                  </li>
+                  <li>
+                    <p>Automation & Testing</p>
+                    <div class="progress progress_sm">
+                      <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="30"></div>
+                    </div>
+                  </li>
+                  <li>
+                    <p>UI / UX</p>
+                    <div class="progress progress_sm">
+                      <div class="progress-bar bg-green" role="progressbar" data-transitiongoal="50"></div>
+                    </div>
+                  </li>
+                </ul> -->
+              <!-- end of skills -->
+
+            </div>
+            <div class="col-md-8 col-sm-8 col-xs-12">
+              <div class="profile_title">
+                <div class="col-md-6">
+                  <h2>User Activity Report</h2>
+                </div>
+              </div>
+              <!-- start of user-activity-graph -->
+              <div style="width:100%; height:280px;">
+                <table id="employee_stats" class="table table-striped table-bordered no-footer" role="grid">
+                  <thead>
+                    <tr>
+                      <th>Attribute</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- tbody is deployed by javascript -->
+                  </tbody>
+                </table>
+              </div>
+              <!-- end of user-activity-graph -->
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+{{end}}
+
+{{define "js"}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{{$v := index .Data "employee-list-type"}}
+
+<script>
+  let token = localStorage.getItem("token")
+  let profileDiv = document.getElementById("employee_profile")
+
+  const requestOptions = {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+    },
+  }
+
+
+  fetch('{{.API}}/api/admin/analytics/employee/{{$v}}', requestOptions)
+    .then(response => response.json())
+    .then(function (data) {
+      if (data) {
+        if (Object.keys(data)[0] === "error") {
+          checkError(data, showErrorInTable());
+          return;
+        }
+        //populate customer_profile div
+        let img = document.getElementById("employee_picture")
+        img.src = '/admin/images/' + data.image_link;
+        img.alt = data.first_name + "'s profile";
+        img.title = data.first_name + " " + data.last_name;
+
+        document.getElementById("employee_name").innerText = data.first_name + " " + data.last_name;
+        if(data.address){ document.getElementById("employee_address").innerText = data.address;}
+
+        document.getElementById("employee_mobile").href = "tel:"+data.mobile;
+        document.getElementById("employee_mobile_text").innerText = data.mobile;
+
+        document.getElementById("employee_email").href = "mailto:" + data.email;
+        document.getElementById("employee_email").innerText = data.email;
+        
+        let editBtn = ` <a href="/admin/general/employees/edit/${data.id}" id="editBtn" class="btn btn-info btn-xs">
+                            <i class="fa fa-edit"></i> Edit
+                          </a>`;
+        let activateBtn = `<a onclick="manageUserAccount(${data.id}, 'activate')" id="activateBtn" class="btn btn-success btn-xs">
+                            <i class="fa fa-check-circle"></i> Activate
+                          </a>`;
+        let suspendBtn = `<a onclick="manageUserAccount(${data.id}, 'suspend')" id="suspendBtn" class="btn btn-warning btn-xs">
+                            <i class="fa fa-ban"></i> Suspend
+                          </a>`;
+        let deleteBtn = `<a onclick="manageUserAccount(${data.id}, 'revoke')" id="revokebtn" class="btn btn-danger btn-xs">
+                            <i class="fa fa-trash"></i> Delete
+                          </a>`;
+        let rejoinBtn = `<a onclick="manageUserAccount(${data.id}, 'rejoin')" id="rejoinBtn" class="btn btn-success btn-xs">
+          <i class="fa fa-question-circle"></i> Reactive
+        </a>`;       
+        if (data.account_status_id === 1){
+          document.getElementById("controlBtn").innerHTML  = editBtn + suspendBtn + deleteBtn;
+        } else if(data.account_status_id === 2){
+          document.getElementById("controlBtn").innerHTML  = editBtn + activateBtn + deleteBtn;
+        } else if(data.account_status_id === 3){
+          document.getElementById("controlBtn").innerHTML  = rejoinBtn;
+        }
+        
+        //employee_stats
+        let table = document.getElementById("employee_stats");
+        let tbody = table.getElementsByTagName("tbody")[0];
+        //accoount status
+        let newRow = tbody.insertRow();
+        attributeCell = newRow.insertCell();
+        attributeCell.appendChild(document.createTextNode("Status"));
+        valueCell = newRow.insertCell();
+        if (data.account_status_id === 1) {
+          valueCell.innerHTML = `<span class="badge rounded-pill bg-success">Active</span>`;
+        } else if (data.account_status_id === 2) {
+          valueCell.innerHTML = `<span class="badge rounded-pill bg-warning">Suspended</span>`;
+        } else if (data.account_status_id === 3) {
+          valueCell.innerHTML = `<span class="badge rounded-pill bg-danger">Resigned</span>`;
+        }
+        //accoount balance == credits
+        newRow = tbody.insertRow();
+        attributeCell = newRow.insertCell();
+        attributeCell.appendChild(document.createTextNode("Balance"));
+        valueCell = newRow.insertCell();
+        valueCell.appendChild(document.createTextNode(data.credits));
+
+
+        //accoount ratings
+        newRow = tbody.insertRow();
+        attributeCell = newRow.insertCell();
+        attributeCell.appendChild(document.createTextNode("Ratings"));
+        valueCell = newRow.insertCell();
+        if (data.rating === 5) {
+          valueCell.innerHTML = `<span class="badge rounded-pill bg-success">${data.rating}</span>`;
+        } else if (data.rating >= 4) {
+          valueCell.innerHTML = `<span class="badge rounded-pill bg-primary">${data.rating}</span>`;
+        } else if (data.rating >= 3) {
+          valueCell.innerHTML = `<span class="badge rounded-pill bg-warning">${data.rating}</span>`;
+        } else {
+          valueCell.innerHTML = `<span class="badge rounded-pill bg-danger">${data.rating}</span>`;
+        }
+
+        //Tasks stats
+        newRow = tbody.insertRow();
+        attributeCell = newRow.insertCell();
+        attributeCell.appendChild(document.createTextNode("Task Completed"));
+        valueCell = newRow.insertCell();
+        valueCell.innerHTML = `<span class="badge bg-dark">${data.task_completed}</span>`;
+        newRow = tbody.insertRow();
+        attributeCell = newRow.insertCell();
+        attributeCell.appendChild(document.createTextNode("Task Cancelled"));
+        valueCell = newRow.insertCell();
+        valueCell.innerHTML = `<span class="badge bg-secondary">${data.task_cancelled}</span>`;
+
+
+
+
+        //Social links div
+        let linksContainer = document.getElementById('social_links');
+        let link = ``
+        if (data.fb_id != "") {
+          link += `<a href="${data.fb_id}" target="_blank"></i><i class="icon fa fa-facebook-square"></i></a>`;
+        }
+        if (data.whatsapp_id != "") {
+          link += `<a href="https://wa.me/${data.whatsapp_id}" target="_blank"></i><i class="icon fa fa-phone-square"></i></a>`;
+        }
+        if (data.x_id != "") {
+          link += `<a href="${data.x_id}" target="_blank"></i><i class="icon fa fa-twitter-square"></i></a>`;
+        }
+        if (data.linkedin_id != "") {
+          link += `<a href="${data.linkedin_id}" target="_blank"></i><i class="icon fa fa-linkedin-square"></i></a>`;
+        }
+        if (data.github_id != "") {
+          link += `<a href="${data.github_id}" target="_blank"></i><i class="icon fa fa-github-square"></i></a>`;
+        }
+        link+=`<a href="sms:+88${data.mobile}">
+                </i><i class="icon fa fa-comments-o"></i>
+              </a>`
+        linksContainer.innerHTML = link;
+      } else {
+        console.log("no data");
+        let newRow = tbody.insertRow();
+        let newCell = newRow.insertCell();
+
+        document.getElementById("row-actions").classList.add("d-none");
+        newRow.classList.add("text-center");
+
+        newCell = newRow.insertCell();
+        newCell.setAttribute('colspan', 8);
+        newCell.innerHTML = "<b>No data available</b>";
+      }
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
+
+    function copyContent(){
+      alert("copied")
+    }
+  //manageUserAccount call the backend route to manage this account
+  function manageUserAccount(id, operation){
+   let prefix = operation.charAt(0).toUpperCase() + operation.slice(1) 
+    Swal.fire({
+      title: `<span style='color:red;'>${prefix}</span> this account?`,
+      text: "You won't be able to undo this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: `${prefix}!`
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`{{.API}}/api/admin/general/employees/${operation}/${id}`, requestOptions)
+        .then(response => response.json())
+        .then(function (data) {
+          if (data.error){
+            if (data.message === "Invalid authentication credentials"){
+              console.log("not logged in");
+              location.href = "/signin"
+            } else {
+                showErrorMessage(data.message);
+            }
+          } else {
+            showSuccessMessage(data.message, function() {
+              location.reload();
+            });
+          }
+        }); 
+      }
+    });
+  };
+  //showSuccessMessage shows success message after successfully refunded 
+  function showSuccessMessage(message, callback) {
+    // Display the success message (synchronously or with a delay)
+    document.getElementById("controlBtn").style.display = "none";
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      }
+    });
+    Toast.fire({
+      icon: "success",
+      title: message,
+    });
+
+    // Assuming the message should be shown for 3 seconds before reloading
+    setTimeout(function() {
+        callback();
+    }, 3000); // Adjust the delay as needed
+  }
+
+  //showErrorMessage shows error message if there is any error occurs during refund process
+  function showErrorMessage(msg){
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.onmouseenter = Swal.stopTimer;
+        toast.onmouseleave = Swal.resumeTimer;
+      }
+    });
+    Toast.fire({
+      icon: "error",
+      title: msg,
+    });
+  }
+</script>
+{{end}}

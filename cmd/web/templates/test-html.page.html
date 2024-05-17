@@ -1,120 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anchor Links to Divs with Animation (HTML/CSS)</title>
-  <style>
-    /* Style for the anchor links */
-    .anchor-link {
-      display: block;
-      margin-top: 20px;
-      /* Adjust as needed */
-      text-decoration: none;
-      color: blue;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice from FreshCart Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .header {
+            background-color: #333333;
+            color: #92ec01;
+            padding: 10px;
+            text-align: center;
+        }
+        .header img {
+            max-width: 150px;
+            border-radius: 50%;
+        }
+        .content {
+            padding: 20px;
+        }
+        .content h1 {
+            color: #333333;
+        }
+        .content p {
+            color: #555555;
+        }
+        .button-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .button {
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .footer {
+            text-align: center;
+            color: #999999;
+            padding: 10px;
+        }
+        .badge {
+          display: inline-block;
+          text-decoration: none;
+          padding: 0.25em 0.4em;
+          margin: 0 5px;
+          font-size: 20px;
+          font-weight: 700;
+          line-height: 1;
+          text-align: center;
+          white-space: nowrap;
+          vertical-align: baseline;
+          border-radius: 0.375rem;
+          color: #ffffff;
+          background-color: #007bff; /* Bootstrap primary color */
+      }
 
-    /* Styles for the divs */
-    .animated-div {
-      height: 500px;
-      background-color: #f0f0f0;
-      opacity: 0;
-      transition: opacity 1s;
-      /* Transition for opacity change */
-    }
+      .badge-primary {
+          background-color: #007bff;
+      }
 
-    /* Styles for the divs when targeted */
-    .animated-div:target {
-      opacity: 1;
-    }
-  </style>
+      .badge-secondary {
+          background-color: #6c757d;
+      }
+
+      .badge-success {
+          background-color: #28a745;
+      }
+
+      .badge-danger {
+          background-color: #dc3545;
+      }
+
+      .badge-warning {
+          background-color: #ffc107;
+          color: #212529;
+      }
+
+      .badge-info {
+          background-color: #17a2b8;
+      }
+
+      .badge-light {
+          background-color: #f8f9fa;
+          color: #212529;
+      }
+
+      .badge-dark {
+          background-color: #343a40;
+      }
+    </style>
 </head>
-
 <body>
-
-  <!-- Div 1 with anchor link -->
-  <a href="#div1" class="anchor-link">Go to Div 1</a>
-  <div id="div1" class="animated-div">
-    <!-- Content of div1 -->
-    <h2>Div 1</h2>
-  </div>
-
-  <!-- Div 2 with anchor link -->
-  <a href="#div2" class="anchor-link">Go to Div 2</a>
-  <div id="div2" class="animated-div">
-    <!-- Content of div2 -->
-    <h2>Div 2</h2>
-  </div>
-
-
-
-
-
-
-
-
-
-
-  <div class="well profile_view">
-    <div class="col-sm-12">
-      <h4 class="brief"><i>Digital Strategist</i></h4>
-      <div class="left col-xs-7">
-        <div class="left col-xs-7">
-          <h1 class="text-center">${i.customer.first_name} ${i.customer.last_name}</h1>
-          <hr>
-          <p><strong>About: </strong> Backend Engineer/Golang. </p>
-          <br>
-          <div class="left col-xs-5">
-            <ul class="list-unstyled">
-                <li><i class="fa fa-info-circle"></i> Customer ID:</li>
-                <li><i class="fa fa-location-arrow"></i> Address:</li>
-                <li><i class="fa fa-envelope"></i> Email:</b></li>
-                <li><i class="fa fa-phone"></i> Phone #:</li>
-                <li><i class="fa fa-clock-o"></i> Created At:</li>
-                <li><i class="fa fa-clock-o"></i> Upadeted At:</li>
-            </ul>
-          </div>
-          <div class="left col-xs-7">
-            <ul class="list-unstyled">
-                <li><b>${i.customer.id}</b></li>
-                <li><b class="text-danger">Update later</b></li>
-                <li><b>${i.customer.email}</b></li>
-                <li><b class="text-danger">Update later</b></li>
-                <li><b>${profileCreatedAt}</b></li>
-                <li><b>${profileUpdatedAt}</b></li>
-            </ul>
-          </div>
+    <div class="email-container">
+        <div class="header">
+            <img src="/admin/images/logo.jpg" alt="FreshCart Shop"><h2>FreshCart Shop</h2>
         </div>
-      </div>
-      <div class="right col-xs-5 text-center">
-        <img src="${imgSrc}" alt="" class="img-circle img-responsive">
-      </div>
+        <div class="content">
+            <h3 style="display: flex; justify-content: center;">Invoice</h3>
+            <hr>
+            <h4>Dear customer,</h4>
+            <p>Thank you for shopping with FreshCart Shop! We appreciate your business and hope you had a wonderful shopping experience with us.</p>
+            <p>Attached to this email, you will find your invoice for your order.</p>
+            
+            <p>If you have any questions or need further assistance, please do not hesitate to contact our customer support team at <a href="contact@freshcart.com">freshcart</a> or call us at [Customer Support Phone Number]. We are here to help!</p>
+            <p>Thank you once again for choosing FreshCart Shop. We look forward to serving you again soon.</p>
+        </div>
+        <div class="footer">
+            <p>Regards,<br>
+            The FreshCart Shop Team</p>
+            <p>
+                <a href="https://facebook.com/freshcartshop" class="badge">Facebook</a> 
+                <a href="https://twitter.com/freshcartshop" class="badge badge-dark">Twitter</a>
+                <a href="https://linkedin.com/freshcartshop" class="badge">LinkedIn</a>
+            </p>
+            <p>If you do not wish to receive emails from us, you can <a class="badge badge-danger" href="contact@freshcart.com">unsubscribe</a>.</p>
+        </div>
     </div>
-    <div class="col-xs-12 bottom text-center">
-      <div class="col-xs-12 col-sm-6 emphasis">
-        <p class="ratings">
-          <a>4.0</a>
-          <a href="#"><span class="fa fa-star"></span></a>
-          <a href="#"><span class="fa fa-star"></span></a>
-          <a href="#"><span class="fa fa-star"></span></a>
-          <a href="#"><span class="fa fa-star"></span></a>
-          <a href="#"><span class="fa fa-star-o"></span></a>
-        </p>
-      </div>
-      <div class="col-xs-12 col-sm-6 emphasis">
-        <a href="/admin/customer/profile/send-msg/${i.customer.id}" class="btn btn-info btn-xs">
-          <i class="fa fa-user"></i><i class="fa fa-comments-o"></i> Send Message
-        </a>
-        <a href="/admin/customer/profile/edit/${i.customer.id}" class="btn btn-warning btn-xs">
-          <i class="fa fa-user"></i><i class="fa fa-comments-o"></i> Edit
-        </a>
-        <a href="/admin/customer/profile/delete/${i.customer.id}" class="btn btn-danger btn-xs">
-          <i class="fa fa-user"></i><i class="fa fa-comments-o"></i> Delete
-        </a>
-      </div>
-    </div>
-  </div>
-</body>
 
+    <a href="" style="text-decoration: none;"></a>
+</body>
 </html>

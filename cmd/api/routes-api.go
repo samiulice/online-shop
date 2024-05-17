@@ -29,18 +29,27 @@ func (app *application) routes() http.Handler {
 		mux.Use(app.Auth)
 
 		mux.Post("/virtual-terminal-payment-succeeded", app.VirtualTerminalPaymentSucceeded)
+
+		//general
+		// mux.Post("/general/employees/add", app.AddEmployee)
+		// mux.Post("/general/employees/edit/{id}", app.UpdateEmployeeAccount) //suspend all the authority an account temporarily
+		mux.Post("/general/employees/activate/{id}", app.ManageEmployeeAccount) //active all the authority a suspened account 
+		mux.Post("/general/employees/suspend/{id}", app.ManageEmployeeAccount) //suspend all the authority an account temporarily
+		mux.Post("/general/employees/revoke/{id}", app.ManageEmployeeAccount) //revoke = suspend all the authority an account permanently
+		mux.Post("/general/employees/rejoin/{id}", app.ManageEmployeeAccount) //undo deleted account-rejoin into the job
 		
 		//Order
 		mux.Post("/analytics/order/view/{type}", app.GetOrdersHistoy)
 		mux.Post("/analytics/order/refund/{type}", app.RefundCharge)
-		
-		//Order
 		mux.Post("/analytics/subscription/cancel/{type}", app.CancelSubscription)
 		
+		//transaction
 		mux.Post("/analytics/transaction/view/{type}", app.GetTransactionHistory)
-
+		//employee
+		mux.Post("/analytics/employee/{type}", app.GetEmployees)
+		
 		//cusotmer
-		mux.Post("/customer/profile/view/{id}", app.AdminCustomerProfile)
+		mux.Post("/customer/profile/view/{type}", app.AdminCustomerProfile)
 	})
 	return mux
 }

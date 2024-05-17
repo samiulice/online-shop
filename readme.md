@@ -26,10 +26,5 @@
 - Uses [soda cli](https://gobuffalo.io/documentation/database/soda/) [A small CLI toolbox to manage database]
 - uses [go simple mail](https://github.com/xhit/go-simple-mail) [Golang package for sending highly customizable email]
 - uses [go alone](https://github.com/bwmarrin/go-alone) [A simple to use, high-performance, Golang MAC signer.]
-<!-- - Uses [nosurf](http://github.com/justinas/nosurf) [CSRF protection middleware for Go]
-- Uses [Govalidator](https://github.com/asaskevich/govalidator) [Pure golang package for Form Validation]
 - Uses [SweetAlert2](https://github.com/sweetalert2/sweetalert2) [Highly customizable JavaScript's popup boxes. Zero dependencies]
-- Uses [Notie](https://github.com/jaredreich/notie) [Notification bar suite for javascript, Zero dependencies]
-
-
-- Uses [Data Table](https://github.com/fiduswriter/simple-datatables) [Lightweight JavaScript HTML table library written in TypeScript and transpiled to Vanilla JavaScript]  -->
+- Uses [PDF Document Generator](https://github.com/phpdave11/gofpdf.git) [A PDF document generator with high level support for text, drawing and images]

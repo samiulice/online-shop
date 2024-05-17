@@ -28,6 +28,8 @@
   <link href="/admin/vendors/jqvmap/dist/jqvmap.min.css" rel="stylesheet" />
   <!-- bootstrap-daterangepicker -->
   <link href="/admin/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
 
   <!-- Custom Theme Style -->
   <link href="/admin/build/css/custom.min.css" rel="stylesheet">
@@ -89,20 +91,19 @@
                       class="fa fa-chevron-down"></span></a>
                   <ul class="nav child_menu">
                     <li><a href="/admin/dashboard">Dashboard</a></li>
-                    <li><a href="/admin/general/profile/view-profile-info">Profile</a></li>
-                    <li><a href="#/admin/dashboard/profile/view-task">Task</a></li>
+                    <li><a href="/admin/general/profile/view">Profile</a></li>
+                    <li><a href="#/admin/dashboard/profile/task">Task</a></li>
                   </ul>
                 </li>
-                <li><a><i class="fa fa-group"></i> Service Provider <span class="fa fa-chevron-down"></span></a>
+                <li><a><i class="fa fa-group"></i> User Management <span class="fa fa-chevron-down"></span></a>
                   <ul class="nav child_menu">
-                    <li><a href="#/admin/employees/active">Active employees</a></li>
-                    <li><a href="#/admin/employees/ex">Ex-employees</a></li>
-                    <li><a href="#/admin/employees/suspended">Suspended</a></li>
-                    <li><a href="#/admin/employees/resigned">Resigned</a></li>
-                    <li><a href="#/admin/employees/all">All List</a></li>
+                    <li><a href="/admin/general/employees/add">Add Employee</a></li>
+                    <li><a href="#/admin/general/employees/edit">Edit Employee Info</a></li>
+                    <li><a href="#/admin/general/customer/add">Add Customer</a></li>
+                    <li><a href="#/admin/general/customer/edit">Edit Customer</a></li>
                   </ul>
                 </li>
-                <li><a><i class="fa fa-database"></i> Stock Controller <span class="fa fa-chevron-down"></span></a>
+                <li><a><i class="fa fa-database"></i> Stock Management <span class="fa fa-chevron-down"></span></a>
                   <ul class="nav child_menu">
                     <li><a href="#/admin/stocks/add">Add To Stocks</a></li>
                     <li><a href="#/admin/stocks/view-stock">View Stock</a></li>
@@ -113,6 +114,15 @@
             <div class="menu_section">
               <h3>Analytics</h3>
               <ul class="nav side-menu">
+                <li><a><i class="fa fa-group"></i> Service Provider <span class="fa fa-chevron-down"></span></a>
+                  <ul class="nav child_menu">
+                    <li><a href="/admin/analytics/employees/active">Active employees</a></li>
+                    <li><a href="/admin/analytics/employees/ex">Ex-employees</a></li>
+                    <li><a href="/admin/analytics/employees/suspended">Suspended</a></li>
+                    <li><a href="/admin/analytics/employees/resigned">Resigned</a></li>
+                    <li><a href="/admin/analytics/employees/all">All List</a></li>
+                  </ul>
+                </li>
                 <li><a><i class="fa fa-history"></i> Sales History <span class="fa fa-chevron-down"></span></a>
                   <ul class="nav child_menu">
                     <li><a href="/admin/analytics/order/view/all">All Sales</a></li>
@@ -361,67 +371,13 @@
   <!-- bootstrap-daterangepicker -->
   <script src="/admin/vendors/moment/min/moment.min.js"></script>
   <script src="/admin/vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
+  <!-- Datatables -->
+  <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
   <script src="/admin/vendors/validator/validator.js"></script>
   <!-- Custom Theme Scripts -->
   <script src="/admin/build/js/custom.min.js"></script>
   <script src="/admin/build/js/app.js"></script>
 
-  <script>
-    function signout() {
-      localStorage.removeItem("token")
-      localStorage.removeItem("token_expiry")
-      location.href = "/signout"
-    }
-
-    function checkAuth() {
-      if (localStorage.getItem("token") === null) {
-        location.href = "/signin"
-        return
-      } else {
-        let token = localStorage.getItem("token");
-        const myHeader = new Headers();
-        myHeader.append("Content-Type", "application/json");
-        myHeader.append("Authorization", "Bearer " + token);
-
-        const requestOptions = {
-          method: "POST",
-          headers: myHeader,
-        }
-
-        fetch("{{.API}}/api/is-authenticated", requestOptions)
-          .then(response => response.json())
-          .then(function (data) {
-            if (data.error === true) {
-              console.log("not logged in");
-              location.href = "/signin"
-            } else {
-              console.log("logged in");
-            }
-          })
-      }
-    }
-    function goBack() {
-      window.location.href = document.referrer;
-    }
-
-    function toggleFullScreen() {
-      let toggleBtn = document.getElementById("screen-icon")
-      if (!document.fullscreenElement) {
-        toggleBtn.classList.remove("glyphicon-fullscreen");
-        toggleBtn.classList.add("glyphicon-resize-small");
-        document.documentElement.requestFullscreen().catch(err => {
-          console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-        });
-      } else {
-        if (document.exitFullscreen) {
-          toggleBtn.classList.remove("glyphicon-resize-small");
-          toggleBtn.classList.add("glyphicon-fullscreen");
-          document.exitFullscreen();
-        }
-      }
-    }
-  </script>
-  
   <!-- Custom JS -->
   {{block "js" .}}{{end}}
   <!-- /Custom CSS -->

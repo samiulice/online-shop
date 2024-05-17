@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/stripe/stripe-go"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -95,24 +95,6 @@ func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-// GetDatesByID tesiting bd pool
-func (app *application) GetDatesByID(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	dateID, _ := strconv.Atoi(id)
-
-	d, err := app.DB.GetDate(dateID)
-	if err != nil {
-		app.errorLog.Println(err)
-	}
-	out, err := json.MarshalIndent(d, "", "    ")
-	if err != nil {
-		app.errorLog.Println(err)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(out)
-}
-
 func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *http.Request) {
 	var data stripePayload
 	err := json.NewDecoder(r.Body).Decode(&data)
@@ -148,6 +130,9 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 		app.infoLog.Println("Subscription id : ", subscription.ID)
 	}
 
+	var orderID, productID int
+	amount, _ := strconv.Atoi(data.Amount)
+	productID, _ = strconv.Atoi(data.ProductID)
 	if ok {
 		//save customer info for each transaction
 		customerID, err := app.SaveCustomer(models.Customer{
@@ -162,7 +147,6 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 			return
 		}
 		//save transaction info to the database
-		amount, _ := strconv.Atoi(data.Amount)
 		txnID, err := app.SaveTransaction(models.Transaction{
 			Amount:              amount,
 			Currency:            data.Currency,
@@ -181,8 +165,7 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 		}
 
 		//save order to database
-		productID, _ := strconv.Atoi(data.ProductID)
-		_, err = app.SaveOrder(models.Order{
+		orderID, err = app.SaveOrder(models.Order{
 			DatesID:       productID,
 			CustomerID:    customerID,
 			TransactionID: txnID,
@@ -196,6 +179,27 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 			app.errorLog.Println(err)
 			return
 		}
+	}
+
+	//call invoice microservice to generate invoice template and send it to the customer email address
+	var product = models.InvoiceProduct{
+		ID:       orderID,
+		Name:     "Ajwa",
+		Quantity: 1,
+		Amount:   amount,
+	}
+	var items = []models.InvoiceProduct{product}
+	var inv = models.Invoice{
+		ID:        productID,
+		FirstName: data.FirstName,
+		LastName:  data.LastName,
+		Email:     data.Email,
+		CreatedAt: time.Now(),
+		Items:     items,
+	}
+	err = app.callInvoiceMicro(inv)
+	if err != nil {
+		app.errorLog.Println(err)
 	}
 
 	resp := jsonResponse{
@@ -491,10 +495,11 @@ func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r
 	app.writeJSON(w, http.StatusOK, txn)
 }
 
+
 // GetOrdersHistoy return list of all sales to the corresponded category in JSON format
 func (app *application) GetOrdersHistoy(w http.ResponseWriter, r *http.Request) {
 	statusType := path.Base(r.URL.Path)
-	if (statusType[0] >= '0' && statusType[0] <= '9'){
+	if statusType[0] >= '0' && statusType[0] <= '9' {
 		Orders, err := app.DB.GetOrdersHistory(statusType)
 		if err != nil {
 			app.errorLog.Println(err)
@@ -504,26 +509,26 @@ func (app *application) GetOrdersHistoy(w http.ResponseWriter, r *http.Request) 
 		app.writeJSON(w, http.StatusOK, Orders)
 	} else {
 		var payload struct {
-			PageSize int `json:"page_size"`
+			PageSize         int `json:"page_size"`
 			CurrentPageIndex int `json:"current_page_index"`
 		}
-		err := app.readJSON(w,r,&payload)
+		err := app.readJSON(w, r, &payload)
 		if err != nil {
 			app.badRequest(w, err)
 			return
 		}
 		Orders, totalRecords, err := app.DB.GetOrdersHistoryPaginated(statusType, payload.PageSize, payload.CurrentPageIndex)
-		
+
 		if err != nil {
 			app.errorLog.Println(err)
 			app.badRequest(w, err)
 			return
 		}
 		var Resp struct {
-			PageSize int `json:"page_size"`
-			CurrentPageIndex int `json:"current_page_index"`
-			TotalRecords int `json:"total_records"`
-			Orders []*models.Order `json:"orders"`
+			PageSize         int             `json:"page_size"`
+			CurrentPageIndex int             `json:"current_page_index"`
+			TotalRecords     int             `json:"total_records"`
+			Orders           []*models.Order `json:"orders"`
 		}
 		Resp.PageSize = payload.PageSize
 		Resp.CurrentPageIndex = payload.CurrentPageIndex
@@ -531,14 +536,14 @@ func (app *application) GetOrdersHistoy(w http.ResponseWriter, r *http.Request) 
 		Resp.Orders = Orders
 		app.writeJSON(w, http.StatusOK, Resp)
 	}
-	
+
 }
 
 // GetTransactionHistory return list of all sales to the corresponded category in JSON format
 func (app *application) GetTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	statusType := path.Base(r.URL.Path)
-	
-	if (statusType[0] >= '0' && statusType[0] <= '9'){
+
+	if statusType[0] >= '0' && statusType[0] <= '9' {
 		Transactions, err := app.DB.GetTransactionsHistory(statusType)
 		if err != nil {
 			app.errorLog.Println(err)
@@ -548,31 +553,118 @@ func (app *application) GetTransactionHistory(w http.ResponseWriter, r *http.Req
 		app.writeJSON(w, http.StatusOK, Transactions)
 	} else {
 		var payload struct {
-			PageSize int `json:"page_size"`
+			PageSize         int `json:"page_size"`
 			CurrentPageIndex int `json:"current_page_index"`
 		}
-		err := app.readJSON(w,r,&payload)
+		err := app.readJSON(w, r, &payload)
 		if err != nil {
 			app.badRequest(w, err)
 			return
 		}
 		Transactions, totalRecords, err := app.DB.GetTransactionsHistoryPaginated(statusType, payload.PageSize, payload.CurrentPageIndex)
-		
+
 		if err != nil {
 			app.errorLog.Println(err)
 			app.badRequest(w, err)
 			return
 		}
 		var Resp struct {
-			PageSize int `json:"page_size"`
-			CurrentPageIndex int `json:"current_page_index"`
-			TotalRecords int `json:"total_records"`
-			Transactions []*models.Transaction `json:"transactions"`
+			PageSize         int                   `json:"page_size"`
+			CurrentPageIndex int                   `json:"current_page_index"`
+			TotalRecords     int                   `json:"total_records"`
+			Transactions     []*models.Transaction `json:"transactions"`
 		}
 		Resp.PageSize = payload.PageSize
 		Resp.CurrentPageIndex = payload.CurrentPageIndex
 		Resp.TotalRecords = totalRecords
 		Resp.Transactions = Transactions
+		app.writeJSON(w, http.StatusOK, Resp)
+	}
+}
+// ManageEmployeeAccount manages employee account
+func (app *application) ManageEmployeeAccount(w http.ResponseWriter, r *http.Request) {
+	
+
+	url := strings.Split(r.URL.Path, "/")
+	action := url[5]
+	id, err := strconv.Atoi(url[6])
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+	var msg string
+	if action == "activate" {
+		err = app.DB.UpdateEmployeeAccountStatusByID(id, 1)
+		msg = "Account renewed and activated..."
+	} else if action == "suspend" {
+		err = app.DB.UpdateEmployeeAccountStatusByID(id, 2)
+		msg = "Account suspened..."
+	} else if action == "revoke" {
+		err = app.DB.UpdateEmployeeAccountStatusByID(id, 3)
+		msg = "Account revoked and disabled..."
+	} else if action == "rejoin"{
+		err = app.DB.UpdateEmployeeAccountStatusByID(id, 1)
+		msg = "Account rejoined and enabled..."
+	}
+
+	var resp struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+	
+	if err != nil {
+		app.errorLog.Println(err)
+		resp.Error = true
+		resp.Message = "Unable to perform this action! please try again"
+		app.writeJSON(w, http.StatusOK, resp)
+		return
+	}
+	
+	resp.Error = false
+	resp.Message = msg
+	app.writeJSON(w, http.StatusOK, resp)
+
+}
+// GetEmployeeList return list of employees to the corresponded category in JSON format
+func (app *application) GetEmployees(w http.ResponseWriter, r *http.Request) {
+	accountType := path.Base(r.URL.Path)
+
+	id, err := strconv.Atoi(accountType)
+	if err == nil {
+		employee, err := app.DB.GetEmployeeByID(id)
+		if err != nil {
+			app.errorLog.Println(err)
+			app.badRequest(w, err)
+			return
+		}
+		app.writeJSON(w, http.StatusOK, employee)
+	} else {
+		var payload struct {
+			PageSize         int `json:"page_size"`
+			CurrentPageIndex int `json:"current_page_index"`
+		}
+		err := app.readJSON(w, r, &payload)
+		if err != nil {
+			app.badRequest(w, err)
+			return
+		}
+		employees, totalRecords, err := app.DB.GetEmployeeListPaginated(accountType, payload.PageSize, payload.CurrentPageIndex)
+
+		if err != nil {
+			app.errorLog.Println(err)
+			app.badRequest(w, err)
+			return
+		}
+		var Resp struct {
+			PageSize         int                   `json:"page_size"`
+			CurrentPageIndex int                   `json:"current_page_index"`
+			TotalRecords     int                   `json:"total_records"`
+			Employees     []*models.Employee `json:"employees"`
+		}
+		Resp.PageSize = payload.PageSize
+		Resp.CurrentPageIndex = payload.CurrentPageIndex
+		Resp.TotalRecords = totalRecords
+		Resp.Employees = employees
 		app.writeJSON(w, http.StatusOK, Resp)
 	}
 }
@@ -601,10 +693,10 @@ func (app *application) RefundCharge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	transactionStatusID, err := strconv.Atoi(ids[1])
-		if err != nil {
-			app.badRequest(w, err)
-			return
-		}
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
 
 	tr, err := app.DB.GetTransactionsHistory(ids[1])
 	if err != nil {
@@ -643,6 +735,7 @@ func (app *application) RefundCharge(w http.ResponseWriter, r *http.Request) {
 	resp.Message = "Order Refunded Successfully"
 	app.writeJSON(w, http.StatusOK, resp)
 }
+
 // CancelSubscription cancel a subscription
 func (app *application) CancelSubscription(w http.ResponseWriter, r *http.Request) {
 	lastPart := path.Base(r.URL.Path)
@@ -654,10 +747,10 @@ func (app *application) CancelSubscription(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	transactionStatusID, err := strconv.Atoi(ids[1])
-		if err != nil {
-			app.badRequest(w, err)
-			return
-		}
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
 
 	tr, err := app.DB.GetTransactionsHistory(ids[1])
 	if err != nil {
@@ -686,7 +779,7 @@ func (app *application) CancelSubscription(w http.ResponseWriter, r *http.Reques
 	err = app.DB.UpdateOrderStatusID(orderStatusID, 3) //update status id = 3 for cancelled order
 	if err != nil {
 		app.badRequest(w, errors.New("subscription Cancelled suceessfully, but unable to update order status"))
-		
+
 		return
 	}
 	var resp struct {
@@ -696,4 +789,28 @@ func (app *application) CancelSubscription(w http.ResponseWriter, r *http.Reques
 	resp.Error = false
 	resp.Message = "Subscription Cancelled Successfully"
 	app.writeJSON(w, http.StatusOK, resp)
+}
+
+// callInvoiceMicro calls the invoice microservice to generate invoice and send it to the customer gmail
+func (app *application) callInvoiceMicro(inv models.Invoice) error {
+	url := "http://localhost:5000/invoice/generate-send"
+	out, err := json.MarshalIndent(inv, "", "\t")
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(out))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	return nil
 }
