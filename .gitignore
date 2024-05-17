@@ -1,0 +1,51 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Ignore any logs
+*.log
+
+# Compiled Object files, Static and Dynamic libs
+*.o
+*.a
+
+# Folders
+_vendor/
+*.app/
+
+# Generated files from the go-swagger utility
+docs/
+restapi/
+
+# End product of a build
+bin/
+
+# Dependency directories (remove the comment below if using Go Modules)
+# /vendor/
+
+# Compiled Go files
+*.test
+*.prof
+
+# GoLand files
+.idea/
+*.iml
+*.ipr
+
+# VS Code files
+.vscode/
+
+# Ignore any local configuration files
+*.env
+
+# Ignore .DS_Store files created by MacOS
+.DS_Store
