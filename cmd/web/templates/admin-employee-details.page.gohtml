@@ -67,7 +67,7 @@ Profile
                     </a>
                     <span id="employee_mobile_text"></span>
                   </span>&nbsp;
-                  <span><a onclick="copyContent()"><i class="fa fa-copy"></i></a></span>
+                  <span ><a id="cpyBtn" onclick="copyToClipboard('cpyBtn', 'employee_mobile_text')"><i class="fa fa-copy"></i></a></span>
                 </li>
                 <li class="badge bg-primary">
                   <!-- will be updated by Javascript DOM -->
@@ -302,9 +302,6 @@ Profile
       console.error('There was a problem with the fetch operation:', error);
     });
 
-    function copyContent(){
-      alert("copied")
-    }
   //manageUserAccount call the backend route to manage this account
   function manageUserAccount(id, operation){
    let prefix = operation.charAt(0).toUpperCase() + operation.slice(1) 
@@ -358,9 +355,9 @@ Profile
     });
 
     // Assuming the message should be shown for 3 seconds before reloading
-    setTimeout(function() {
+    (function() {
         callback();
-    }, 3000); // Adjust the delay as needed
+    }setTimeout, 3000); // Adjust the delay as needed
   }
 
   //showErrorMessage shows error message if there is any error occurs during refund process

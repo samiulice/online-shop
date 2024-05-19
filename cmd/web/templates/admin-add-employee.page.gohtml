@@ -5,36 +5,160 @@ Add New Employee
 {{end}}
 
 {{define "content"}}
-
 <div class="row">
-  <div class="col-md-12">
+
+  <div class="col-md-6 col-sm-12 col-xs-12 col-md-offset-3">
     <div class="x_panel">
       <div class="x_title">
-        <h3 class="text-center">
-          Employee Registration From
-        </h3>
-        <ul class="nav navbar-right panel_toolbox">
-          <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-          </li>
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i
-                class="fa fa-wrench"></i></a>
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="#">Settings 1</a>
-              </li>
-              <li><a href="#">Settings 2</a>
-              </li>
-            </ul>
-          </li>
-          <li><a class="close-link"><i class="fa fa-close"></i></a>
-          </li>
-        </ul>
+        <h2>Employee Registration Form</h2>
         <div class="clearfix"></div>
       </div>
       <div class="x_content">
-        <!-- TODO: form updated later -->
+        <div class="row text-center">
+          <div class="h5 badge bg-success d-none" id="alert_msg">This is a test alert</div>
+        </div>
+
+
+        <!-- start form for validation -->
+        <form action="#" id="employee_regi_form" data-parsley-validate>
+          <!-- First Name -->
+          <div class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
+            <label for="first_name">First Name * :</label>
+            <input type="text" class="form-control has-feedback-left" id="first_name" name="first_name"
+              placeholder="Enter First Name" required autocomplete="">
+            <span style="color: rgba(0, 0, 0, 0.75);" class="form-control-feedback left glyphicon glyphicon-user"
+              aria-hidden="true"></span>
+          </div>
+
+          <!-- Last Name -->
+          <div class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
+            <label for="last_name">Last Name :</label>
+            <input type="text" class="form-control has-feedback-left" id="last_name" name="last_name"
+              placeholder="Enter Last Name" autocomplete="">
+            <span style="color: rgba(0, 0, 0, 0.75);" class="form-control-feedback left glyphicon glyphicon-user"
+              aria-hidden="true"></span>
+          </div>
+
+          <!-- Contact -->
+          <div class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
+            <label for="user_contact">Mobile * :</label>
+            <input type="user_contact" class="form-control has-feedback-left" id="user_contact" name="user_contact"
+              placeholder="Enter you email" data-parsley-trigger="change" required autocomplete="">
+            <span style="color: rgba(0, 0, 0, 0.75);" class="form-control-feedback left glyphicon glyphicon-phone"
+              aria-hidden="true"></span>
+          </div>
+
+          <!-- Email -->
+          <div class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
+            <label for="user_email">Email * :</label>
+            <input type="email" class="form-control has-feedback-left" id="user_email" name="user_email"
+              placeholder="Enter you email" data-parsley-trigger="change" required autocomplete="">
+            <span style="color: rgba(0, 0, 0, 0.75);" class="form-control-feedback left glyphicon glyphicon-envelope"
+              aria-hidden="true"></span>
+          </div>
+          <div class="col-md-12 col-sm-12 col-xs-12">
+            <br>
+          </div>
+
+          <!-- Verification methods -->
+          <div class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
+            <label>Get Verification Code * :</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Email:
+            <input type="radio" class="flat" name="otpMethod" id="EVerify" value="M" checked="" required />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            SMS:
+            <input type="radio" class="flat" name="otpMethod" id="SMSVerify" value="F" />
+          </div>
+
+          <!-- buttons -->
+          <div class="form-group">
+            <div id="btns" class="col-md-12 col-sm-12 col-xs-12 col-md-offset-3">
+              <br>
+              <a onclick="goBack()" class="btn btn-dark">Cancel</a>
+              <a id="submitBtn" class="btn btn-success">Submit</a>
+            </div>
+          </div>
+
+        </form>
+        <!-- end form for validations -->
+
       </div>
     </div>
   </div>
+
 </div>
+
+{{end}}
+
+{{define "js"}}
+<script>
+  let token = localStorage.getItem("token")
+  let alert_msg = document.getElementById('alert_msg');
+  let btns = document.getElementById('btns');
+
+
+  document.getElementById('submitBtn').addEventListener('click', function (event) {
+    const firstName = document.getElementById("first_name").value;
+    const lastName = document.getElementById("last_name").value;
+    const userEmail = document.getElementById("user_email").value;
+    const userContact = document.getElementById("user_contact").value;
+    const otpMethod = document.getElementById("EVerify").checked;
+
+    let userInput = {
+      first_name: firstName,
+      last_name: lastName,
+      email: userEmail,
+      mobile: userContact,
+      user_type: 'employees',
+      otp_method: otpMethod,
+    }
+
+    const requestOptions = {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify(userInput),
+    }
+
+    fetch('{{.API}}/api/admin/general/user/add', requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        if (data.error === true) {
+          showError(data.message)   
+          // setTimeout(function() {
+          //   location.reload();
+          // }, 5000); // Adjust the delay as needed       
+        } else {
+          showSuccess(data.message);
+        }
+      })
+  });
+
+  function showError(msg) {
+    alert_msg.classList.remove('d-none');
+    alert_msg.classList.add('d-flex');
+
+    alert_msg.classList.add('bg-danger')
+    alert_msg.classList.remove('bg-success')
+    alert_msg.innerText = msg 
+  }
+
+  function showSuccess(msg) {
+    alert_msg.classList.remove('d-none');
+    alert_msg.classList.add('d-flex');
+
+    alert_msg.classList.add('bg-success')
+    alert_msg.classList.remove('bg-danger')
+    alert_msg.innerText = msg
+
+    btns.style.display = 'none';
+  }
+
+
+</script>
+
+
 {{end}}

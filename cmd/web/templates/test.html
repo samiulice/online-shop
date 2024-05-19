@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTP Sent</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <style>
+    .container {
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="alert alert-info">
+    <strong>OTP Sent</strong><br>
+    A One-Time Password (OTP) has been sent to your <span id="contactMethod">email address</span>. Please check your <span id="messageInbox">inbox</span> and enter the OTP below to proceed.
+    <br><br>
+    If you do not receive the OTP within a few minutes, please check your spam/junk folder or request a new OTP.
+  </div>
+  <form>
+    <div class="form-group">
+      <label for="otp">Enter OTP:</label>
+      <input type="text" class="form-control" id="otp" placeholder="Enter OTP" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</div>
+
+<script>
+  // Example: dynamically setting the contact method and message inbox type
+  const contactMethod = 'email address';  // or 'phone number'
+  const messageInbox = 'inbox';  // or 'message inbox'
+
+  document.getElementById('contactMethod').textContent = contactMethod;
+  document.getElementById('messageInbox').textContent = messageInbox;
+</script>
+
+</body>
+</html>

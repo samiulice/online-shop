@@ -1,6 +1,8 @@
 package repository
 
-import "online_store/internal/models"
+import (
+	"online_store/internal/models"
+)
 
 type DatabaseRepo interface {
 	GetDate(id int) (models.Date, error)
@@ -23,13 +25,17 @@ type DatabaseRepo interface {
 	UpdateTransactionStatusID(id, statusID int) error
 
 	//Employee
+	
 	GetEmployeeByID(id int) (models.Employee, error)
 	GetEmployeeListPaginated(accountType string, pageSize, currentPageIndex int) ([]*models.Employee, int, error)
 	UpdateEmployeeAccountStatusByID(id, accountStatusID int) error
+	
 	//User
 	GetUserDetails(index, paramType string) (models.User, error)
-	UpdatePasswordByUserID(id, newPassword string) error
-
+	UpdateUserPasswordByID(userType, id, newPassword string) error
+	IsRegistered(userType, paramType, paramValue string) (int, error)
+	VerifyUser(userType, searchParam, paramValue string) (int, string, string, error)
+	UserPreRegistration(userType, firstName, lastName, email, mobile string) (int , error)
 	//Token
 	InsertToken(t *models.Token, u models.User) error
 	GetUserbyToken(token string) (*models.User, error)

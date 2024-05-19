@@ -32,22 +32,6 @@ func (app *application) SendMail(from, to, subject, tmpl string, data interface{
 
 	formattedMessage := tpl.String()
 
-	//Plain text Email templates
-	templateName = fmt.Sprintf("templates/%s.plain.tmpl", tmpl)
-
-	t, err = template.New("email-plain").ParseFS(emailTemplateFS, templateName)
-	if err != nil {
-		app.errorLog.Println(err)
-		return err
-	}
-	err = t.ExecuteTemplate(&tpl, "body", data)
-	if err != nil {
-		app.errorLog.Println(err)
-		return err
-	}
-
-	plainMessage := tpl.String()
-
 	//set up mail server
 	server := mail.NewSMTPClient()
 	server.Host = app.config.smtp.host
@@ -71,8 +55,7 @@ func (app *application) SendMail(from, to, subject, tmpl string, data interface{
 		AddTo(to).
 		SetSubject(subject)
 	email.SetBody(mail.TextHTML, formattedMessage)
-	email.AddAlternative(mail.TextPlain, plainMessage)
-
+	
 	err = email.Send(smtpClient)
 	if err != nil {
 		app.errorLog.Println(err)

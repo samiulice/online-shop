@@ -4,6 +4,41 @@ import (
 	"time"
 )
 
+const (
+	// AustraliaRegex matches Australian mobile numbers with or without country code (+61)
+	AustraliaRegex = `^(\+?61|0)4\d{8}$`
+
+	// BangladeshRegex matches Bangladeshi mobile numbers with or without country code (+880)
+	BangladeshRegex = `^\+?(880)?1[3-9]\d{8}$`
+
+	// CanadaRegex matches Canadian phone numbers in various formats
+	CanadaRegex = `^(\+?1)?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$`
+
+	// FranceRegex matches French phone numbers with or without country code (+33)
+	FranceRegex = `^(?:(?:\+|00)33|0)\s*[1-9](?:[\s.-]*\d{2}){4}$`
+
+	// GermanyRegex matches German phone numbers with or without country code (+49)
+	GermanyRegex = `^(\+?49|0)(\d{3,4})?[ -]?(\d{3,4})?[ -]?(\d{4,6})$`
+
+	// IndiaRegex matches Indian mobile numbers with or without country code (+91)
+	IndiaRegex = `^\+?(91)?\d{10}$`
+
+	// JapanRegex matches Japanese phone numbers with or without country code (+81)
+	JapanRegex = `^\+?81[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{4}$`
+
+	// PakistanRegex matches Pakistani mobile numbers with or without country code (+92)
+	PakistanRegex = `^\+?(92)?\d{10}$`
+
+	// SriLankaRegex matches Sri Lankan mobile numbers with or without country code (+94)
+	SriLankaRegex = `^\+?(94)?\d{9}$`
+
+	// UKRegex matches UK phone numbers including landline, mobile, and toll-free numbers
+	UKRegex = `^(?:(?:\+44\s?|0)(?:\d{5}\s?\d{5}|\d{4}\s?\d{4}\s?\d{4}|\d{3}\s?\d{3}\s?\d{4}|\d{2}\s?\d{4}\s?\d{4}|\d{4}\s?\d{4}|\d{4}\s?\d{3})|\d{5}\s?\d{4}\s?\d{4}|0800\s?\d{3}\s?\d{4})$`
+
+	// USRegex matches US phone numbers in various formats
+	USRegex = `^\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$`
+)
+
 // Date is the type for all dates that holds the info about it
 type Date struct {
 	ID              int       `json:"id"`
@@ -93,6 +128,7 @@ type Employee struct {
 	UserName        string         `json:"user_name"`
 	FirstName       string         `json:"first_name"`
 	LastName        string         `json:"last_name"`
+	Gender        string         `json:"gender"`
 	Address        string         `json:"address"`
 	Email           string         `json:"email"`
 	FacebookID      string         `json:"fb_id"`
@@ -108,6 +144,8 @@ type Employee struct {
 	TaskCompleted   int            `json:"task_completed"`
 	TaskCancelled   int            `json:"task_cancelled"`
 	Rating          int            `json:"rating"` //5*TaskCompleted/(TaskCompleted+TaskCancelled)
+	NID        string         `json:"nid"`
+	NIDLink        string         `json:"nid_link"`
 	CreatedAt       time.Time      `json:"created_at"`
 	UpdatedAt       time.Time      `json:"updated_at"`
 	AccountStatus   EmployeeStatus `json:"account_status"`

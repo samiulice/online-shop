@@ -27,6 +27,7 @@ func (app *application) routes() http.Handler {
 	//Reset Password
 	mux.Get("/forgot-password", app.ForgotPassword)
 	mux.Get("/reset-password", app.ResetPassword)
+	mux.Get("/setup-new-password", app.SetupNewUserPassword)
 
 	//404 not found route
 	mux.NotFound(app.PageNotFound)
@@ -34,7 +35,9 @@ func (app *application) routes() http.Handler {
 
 	//Public file server
 	publicFileServer := http.FileServer(http.Dir("./public/assets"))
+	publicFileServer2 := http.FileServer(http.Dir("./public/admin"))
 	mux.Handle("/public/assets/*", http.StripPrefix("/public/assets", publicFileServer))
+	mux.Handle("/public/admin/*", http.StripPrefix("/public/admin", publicFileServer2))
 
 	//secure routes
 	mux.Route("/admin", func(mux chi.Router) {
@@ -44,7 +47,7 @@ func (app *application) routes() http.Handler {
 
 		//routes for general >> Admin
 		mux.Get("/general/profile/view", app.AdminViewProfile)
-		mux.Get("/general/employees/add", app.AdminAddEmployee)
+		mux.Get("/general/user/add", app.AdminAddUser)
 
 		//routes for analytics >> Service Provider
 		mux.Get("/analytics/employees/active", app.AdminViewEmployee)
@@ -65,6 +68,7 @@ func (app *application) routes() http.Handler {
 
 		//404 not found route
 		mux.NotFound(app.PageNotFound)
+
 
 		//Admin file server
 		publicFileServer := http.FileServer(http.Dir("./"))

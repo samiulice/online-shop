@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -227,8 +228,16 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 		app.badRequest(w, err)
 	}
 
+	var param string
+	if strings.Contains(userInput.UserName, "@"){
+		param = "email"
+	} else if app.MatchMobileNumberPattern(userInput.UserName, models.BangladeshRegex){
+		param = "mobile"
+	}else {
+		param = "user_name"
+	}
 	//get the user from the database by username; send error if invalid username
-	user, err := app.DB.GetUserDetails(userInput.UserName, "user_name")
+	user, err := app.DB.GetUserDetails(userInput.UserName, param)
 	if err != nil {
 		app.invalidCradentials(w)
 		return
@@ -297,6 +306,8 @@ func (app *application) CheckAuthenticated(w http.ResponseWriter, r *http.Reques
 func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var userInput struct {
 		UserName string `json:"user_name"`
+		UserType string `json:"user_type"`
+		OTPMethod bool `json:"otp_method"`
 	}
 	err := app.readJSON(w, r, &userInput)
 	if err != nil {
@@ -310,39 +321,61 @@ func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//verify the user
-	user, err := app.DB.GetUserDetails(userInput.UserName, "user_name")
-	if err != nil {
+	
+	if userInput.OTPMethod {
+		_, _, _, err := app.DB.VerifyUser(userInput.UserType, "mobile", userInput.UserName)
+		if err == sql.ErrNoRows  { //no data found against mobile number
+			response.Error = true
+			response.Message = "Unregistered Mobile number! Please provide correct number"
+			app.writeJSON(w, http.StatusAccepted, response)
+			return
+		} else if err != nil { //database error
+			app.badRequest(w,err)
+			return
+		}
+		 //TODO: Implement SMS OTP and romve this error
 		response.Error = true
-		response.Message = "Username or Email doesn't match"
+		response.Message = "SMS verification method doesn't implement yet, try with email verification"
 		app.writeJSON(w, http.StatusAccepted, response)
 		return
+
+	} else {
+		id, email, _, err := app.DB.VerifyUser(userInput.UserType, "email", userInput.UserName)
+		if err == sql.ErrNoRows  { //no data found against mobile number
+			response.Error = true
+			response.Message = "Unregistered Email! Please provide correct email"
+			app.writeJSON(w, http.StatusAccepted, response)
+			return
+		} else if err != nil { //database error
+			app.badRequest(w,err)
+			return
+		}
+		//Generate signed url
+		link := fmt.Sprintf("%s/reset-password?user=%s&email=%s&user_id=%v", app.config.frontend, userInput.UserType, email, id)
+		sign := urlsigner.Signer{
+			Secret: []byte(app.config.secretKey),
+		}
+		signedLink := sign.GenerateTokenFromString(link)
+
+		//Send Mail
+		var data struct {
+			Link string `json:"link"`
+		}
+
+		data.Link = signedLink
+
+		err = app.SendMail("info@demomailtrap.com", "coding.samiul@gmail.com", "Request for password reset", "reset-password", data)
+		if err != nil {
+			app.errorLog.Println(err)
+			app.badRequest(w, err)
+			return
+		}
+
+		//Send JSON Response to the frontend after sending email successfully
+		response.Error = false
+		response.Message = "A password reset link sent to your email"
+		app.writeJSON(w, http.StatusOK, response)
 	}
-
-	//Generate signed url
-	link := fmt.Sprintf("%s/reset-password?email=%s&user_id=%v", app.config.frontend, user.Email, user.ID)
-	sign := urlsigner.Signer{
-		Secret: []byte(app.config.secretKey),
-	}
-	signedLink := sign.GenerateTokenFromString(link)
-
-	//Send Mail
-	var data struct {
-		Link string `json:"link"`
-	}
-
-	data.Link = signedLink
-
-	err = app.SendMail("info@demomailtrap.com", "coding.samiul@gmail.com", "Password reset request", "reset-password", data)
-	if err != nil {
-		app.errorLog.Println(err)
-		app.badRequest(w, err)
-		return
-	}
-
-	//Send JSON Response to the frontend after sending email successfully
-	response.Error = false
-	response.Message = "A password reset link sent to your email"
-	app.writeJSON(w, http.StatusOK, response)
 
 }
 
@@ -351,6 +384,7 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	var userInput struct {
 		ID                 string `json:"user_id"`
 		Email              string `json:"email"`
+		UserType              string `json:"user_type"`
 		NewPassword        string `json:"new_password"`
 		ConfirmNewPassword string `json:"confirm_new_password"`
 	}
@@ -396,7 +430,7 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		app.badRequest(w, err)
 		return
 	}
-	err = app.DB.UpdatePasswordByUserID(decryptedUserID, string(newhash))
+	err = app.DB.UpdateUserPasswordByID(userInput.UserType,decryptedUserID, string(newhash))
 	if err != nil {
 		app.badRequest(w, err)
 		return
@@ -405,6 +439,70 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	//Send JSON Response to the frontend after sending email successfully
 	response.Error = false
 	response.Message = "Password updated. Redirecting..."
+	app.writeJSON(w, http.StatusOK, response)
+
+}
+
+// ResetPassword saves the newly entered password to the database
+func (app *application) SetupNewUserPassword(w http.ResponseWriter, r *http.Request) {
+	var userInput struct {
+		ID                 string `json:"user_id"`
+		Email              string `json:"email"`
+		UserType              string `json:"user_type"`
+		NewPassword        string `json:"new_password"`
+		ConfirmNewPassword string `json:"confirm_new_password"`
+	}
+
+	err := app.readJSON(w, r, &userInput)
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+
+	//Decrypt email and ID
+	decryptor := encryption.Encryption{
+		Key: []byte(app.config.secretKey),
+	}
+
+	_, err = decryptor.Decrypt(userInput.Email)
+	if err != nil {
+		app.errorLog.Println("falied to decrypt email:\t", err)
+		return
+	}
+	decryptedUserID, err := decryptor.Decrypt(userInput.ID)
+	if err != nil {
+		app.errorLog.Println("falied to decrypt userID:\t", err)
+		return
+	}
+
+	var response struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+
+	//Varifay that two password are same
+	if userInput.NewPassword != userInput.ConfirmNewPassword {
+		response.Error = true
+		response.Message = "Password mismatch"
+		app.writeJSON(w, http.StatusAccepted, response)
+		return
+	}
+
+	//update password
+	newhash, err := bcrypt.GenerateFromPassword([]byte(userInput.NewPassword), 12)
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+	err = app.DB.UpdateUserPasswordByID(userInput.UserType,decryptedUserID, string(newhash))
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+
+	//Send JSON Response to the frontend after sending email successfully
+	response.Error = false
+	response.Message = "Password setup Successfully. Redirecting..."
 	app.writeJSON(w, http.StatusOK, response)
 
 }
@@ -495,7 +593,6 @@ func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r
 	app.writeJSON(w, http.StatusOK, txn)
 }
 
-
 // GetOrdersHistoy return list of all sales to the corresponded category in JSON format
 func (app *application) GetOrdersHistoy(w http.ResponseWriter, r *http.Request) {
 	statusType := path.Base(r.URL.Path)
@@ -581,9 +678,123 @@ func (app *application) GetTransactionHistory(w http.ResponseWriter, r *http.Req
 		app.writeJSON(w, http.StatusOK, Resp)
 	}
 }
+
+// SendVerificationCode sends OTP to the email or mobile number
+func (app *application) SendVerificationCodeToEmail(id int, urlPath, tmpl, subject, email, userType string) error {
+
+	//Generate signed url
+	link := fmt.Sprintf("%s/%s?user=%s&email=%s&user_id=%v", app.config.frontend, urlPath, userType, email, id)
+	sign := urlsigner.Signer{
+		Secret: []byte(app.config.secretKey),
+	}
+	signedLink := sign.GenerateTokenFromString(link)
+
+	//Send Mail
+	var data struct {
+		Link string `json:"link"`
+	}
+
+	data.Link = signedLink
+
+	err := app.SendMail("info@demomailtrap.com", "coding.samiul@gmail.com", subject, tmpl, data)
+	return err
+
+}
+
+
+// AddUser verify the user mobile and email and then send a password setup link if mobile and email both are unique.
+//If everthing okay then user will be added to the database  
+func (app *application) AdminAddUser(w http.ResponseWriter, r *http.Request) {
+	// Write JSON response to the frontend
+	var resp struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+
+	// Read JSON from the frontend
+	var userInput struct {
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Email     string `json:"email"`
+		Mobile    string `json:"mobile"`
+		UserType string   `json:"user_type"`
+		OTPMethod bool   `json:"otp_method"`
+		
+	}
+	err := app.readJSON(w, r, &userInput)
+	if err != nil {
+		resp.Error = true
+		resp.Message = "Internal Server Error! Try Again"
+		app.writeJSON(w, http.StatusInternalServerError, resp) //error while reading json
+		return
+	}
+	
+	//validate form
+	// implement Later
+	if ( userInput.FirstName == "" || userInput.Email == "" || userInput.Mobile == ""){
+		resp.Error = true
+		resp.Message = "Invalid Form!Please fill the form with appropriate input"
+		app.writeJSON(w, http.StatusBadRequest, resp) //error while reading json
+		return
+	}
+
+	//Validate that user mail or number is unique
+	//checks that mobile doesn't registered yet
+	id, err := app.DB.IsRegistered(userInput.UserType, "mobile", userInput.Mobile)
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+	if  id != 0 {
+		resp.Error = true
+		resp.Message = "Mobile number already registered, please enter another number or login"
+		app.writeJSON(w, http.StatusBadRequest, resp) //mobile number already registered
+		return
+	}
+	//checks that email doesn't registered yet
+	id, err = app.DB.IsRegistered(userInput.UserType, "email", userInput.Email)
+	if err != nil {
+		app.badRequest(w, err)
+		return
+	}
+	if id != 0 {
+		resp.Error = true
+		resp.Message = "Email already registered, please enter another email or log in"
+		app.writeJSON(w, http.StatusBadRequest, resp) //email already registered
+		return
+	}
+
+	//add the user info to the database
+	id, err = app.DB.UserPreRegistration(userInput.UserType,userInput.FirstName, userInput.LastName, userInput.Email, userInput.Mobile) //initial datas are inserted 
+	if err != nil {
+		resp.Error = true
+		resp.Message = "Database error! Try Again"
+		app.writeJSON(w, http.StatusInternalServerError, resp) //error while reading json
+		return
+	}
+	app.infoLog.Println("inserted user: ", userInput.Email)
+	if userInput.OTPMethod { //if true then send otp to the Email
+
+		err = app.SendVerificationCodeToEmail(id, "setup-new-password", "setup-new-password", "Setup New Password", userInput.Email, userInput.UserType)
+		if err != nil {
+			app.badRequest(w, err)
+			return
+		}
+		resp.Error = false
+		resp.Message = fmt.Sprintf("An email has been sent to %s. Please check your inbox to get the instructions.\nIf you do not receive the email within a few minutes, please check your spam/junk folder or request a new email.", userInput.Email)
+		app.writeJSON(w, http.StatusInternalServerError, resp) //error while reading json
+		
+	} else { //otherwise, send OTP to the Mobile
+		resp.Error = true
+		resp.Message = "Send OTP to mobile is not implemented yet, try with email verification"
+		app.writeJSON(w, http.StatusAccepted, resp) //error while reading json
+		return
+	}
+	
+}
+
 // ManageEmployeeAccount manages employee account
 func (app *application) ManageEmployeeAccount(w http.ResponseWriter, r *http.Request) {
-	
 
 	url := strings.Split(r.URL.Path, "/")
 	action := url[5]
@@ -602,7 +813,7 @@ func (app *application) ManageEmployeeAccount(w http.ResponseWriter, r *http.Req
 	} else if action == "revoke" {
 		err = app.DB.UpdateEmployeeAccountStatusByID(id, 3)
 		msg = "Account revoked and disabled..."
-	} else if action == "rejoin"{
+	} else if action == "rejoin" {
 		err = app.DB.UpdateEmployeeAccountStatusByID(id, 1)
 		msg = "Account rejoined and enabled..."
 	}
@@ -611,7 +822,7 @@ func (app *application) ManageEmployeeAccount(w http.ResponseWriter, r *http.Req
 		Error   bool   `json:"error"`
 		Message string `json:"message"`
 	}
-	
+
 	if err != nil {
 		app.errorLog.Println(err)
 		resp.Error = true
@@ -619,12 +830,13 @@ func (app *application) ManageEmployeeAccount(w http.ResponseWriter, r *http.Req
 		app.writeJSON(w, http.StatusOK, resp)
 		return
 	}
-	
+
 	resp.Error = false
 	resp.Message = msg
 	app.writeJSON(w, http.StatusOK, resp)
 
 }
+
 // GetEmployeeList return list of employees to the corresponded category in JSON format
 func (app *application) GetEmployees(w http.ResponseWriter, r *http.Request) {
 	accountType := path.Base(r.URL.Path)
@@ -656,10 +868,10 @@ func (app *application) GetEmployees(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var Resp struct {
-			PageSize         int                   `json:"page_size"`
-			CurrentPageIndex int                   `json:"current_page_index"`
-			TotalRecords     int                   `json:"total_records"`
-			Employees     []*models.Employee `json:"employees"`
+			PageSize         int                `json:"page_size"`
+			CurrentPageIndex int                `json:"current_page_index"`
+			TotalRecords     int                `json:"total_records"`
+			Employees        []*models.Employee `json:"employees"`
 		}
 		Resp.PageSize = payload.PageSize
 		Resp.CurrentPageIndex = payload.CurrentPageIndex

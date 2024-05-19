@@ -334,6 +334,7 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.URL.Query().Get("email")
 	userID := r.URL.Query().Get("user_id")
+	userType := r.URL.Query().Get("user")
 
 	//encrypt email and userID
 	encryptor := encryption.Encryption{
@@ -353,8 +354,70 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	data["email"] = encryptedEmail
 	data["user_id"] = encryptedUserID
+	data["user"] = userType
 
 	if err := app.renderTemplate(w, r, "reset-password", &templateData{Data: data}); err != nil {
+		app.errorLog.Println(err)
+	}
+
+}
+
+// ResetPassword renders reset password page from signed url
+func (app *application) SetupNewUserPassword(w http.ResponseWriter, r *http.Request) {
+	//verify that url was signed
+	url := r.RequestURI
+	testURL := fmt.Sprintf("%s%s", app.config.frontend, url)
+
+	signer := urlsigner.Signer{
+		Secret: []byte(app.config.secretKey),
+	}
+
+	//Verify and check Token expiry
+	valid := signer.VerifyToken(testURL)
+
+	data := make(map[string]interface{})
+	if !valid {
+		data["msg"] = "tempered or broken"
+		if err := app.renderTemplate(w, r, "password-reset-link-invalid", &templateData{Data: data}); err != nil {
+			app.errorLog.Println(err)
+			return
+		}
+		return
+	}
+	expired := signer.Expired(testURL, 60)
+	if expired {
+		data["msg"] = "expired"
+		if err := app.renderTemplate(w, r, "password-reset-link-invalid", &templateData{Data: data}); err != nil {
+			app.errorLog.Println(err)
+			return
+		}
+		return
+	}
+	email := r.URL.Query().Get("email")
+	userID := r.URL.Query().Get("user_id")
+	userType := r.URL.Query().Get("user")
+
+	//encrypt email and userID
+	encryptor := encryption.Encryption{
+		Key: []byte(app.config.secretKey),
+	}
+
+	encryptedEmail, err := encryptor.Encrypt(email)
+	if err != nil {
+		app.errorLog.Println("falied to encrypt email:\t", err)
+		return
+	}
+	encryptedUserID, err := encryptor.Encrypt(userID)
+	if err != nil {
+		app.errorLog.Println("falied to encrypt userID:\t", err)
+		return
+	}
+
+	data["email"] = encryptedEmail
+	data["user_id"] = encryptedUserID
+	data["user"] = userType
+
+	if err := app.renderTemplate(w, r, "setup-new-password", &templateData{Data: data}); err != nil {
 		app.errorLog.Println(err)
 	}
 
@@ -390,9 +453,16 @@ func (app *application) AdminViewProfile(w http.ResponseWriter, r *http.Request)
 	}
 }
 // AdminAddEmployee renders add admin page
-func (app *application) AdminAddEmployee(w http.ResponseWriter, r *http.Request) {
+func (app *application) AdminAddUser(w http.ResponseWriter, r *http.Request) {
+	userType := r.URL.Query().Get("user")
+	var tmpl = "admin-add-"
+	if userType == "employee" {
+		tmpl += userType
+	} else {
+		tmpl += "user"
+	}
 	user := app.Session.Get(r.Context(), "user").(models.User)
-	if err := app.renderTemplate(w, r, "admin-add-employee", &templateData{User: user}); err != nil {
+	if err := app.renderTemplate(w, r, tmpl, &templateData{User: user}); err != nil {
 		app.errorLog.Println(err)
 	}
 }

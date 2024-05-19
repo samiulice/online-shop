@@ -5,13 +5,55 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
+	"fmt"
 	"online_store/internal/models"
 	"strconv"
 	"time"
 )
 
+//IsRegistered chceks whether an user data is already exist or not
+//If exist then return true, id, nil
+//If doesn't exist then return false, 0, nil
+//If error occured then return false, 0, error
+func(p *postgresDBRepo) IsRegistered(userType, paramType, paramValue string) (int, error){
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var id int
+	query := fmt.Sprintf("SELECT id	FROM %s	WHERE %s = $1", userType, paramType) 
+	err := p.DB.QueryRowContext(ctx, query, paramValue).Scan(&id)
+
+	if err == sql.ErrNoRows {
+		// does not exist
+		return 0, nil
+	} else if err != nil {
+		//Database error
+		return 0, err
+	}
+
+	return id, nil
+	
+}
+
+//VerifyUser chceks user validity
+//If valid user then return id, email, mobile, nil
+//If doesn't exist then return 0,"", "", nil
+//If error occured then return 0,"", "", error
+func(p *postgresDBRepo) VerifyUser(userType, searchParam, paramValue string) (int, string, string, error){
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var id int
+	var email, mobile string
+	query := fmt.Sprintf("SELECT id, email, mobile	FROM %s	WHERE %s = $1", userType, searchParam) 
+	err := p.DB.QueryRowContext(ctx, query, paramValue).Scan(&id, &email, &mobile)
+
+	return id, email, mobile, err
+	
+}
+
 // GetDate return a date package for specific id
-func (m *postgresDBRepo) GetDate(id int) (models.Date, error) {
+func (p *postgresDBRepo) GetDate(id int) (models.Date, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -22,7 +64,7 @@ func (m *postgresDBRepo) GetDate(id int) (models.Date, error) {
 			package_weight, package_price, stock_level, coalesce(image_link, ''), created_at, updated_at
 		FROM dates
 		WHERE id = $1`
-	row := m.DB.QueryRowContext(ctx, query, id)
+	row := p.DB.QueryRowContext(ctx, query, id)
 
 	err := row.Scan(
 		&d.ID,
@@ -43,7 +85,7 @@ func (m *postgresDBRepo) GetDate(id int) (models.Date, error) {
 }
 
 // InsertTransaction inserts new transaction to the database and returns its id
-func (m *postgresDBRepo) InsertTransaction(txn models.Transaction) (int, error) {
+func (p *postgresDBRepo) InsertTransaction(txn models.Transaction) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -53,7 +95,7 @@ func (m *postgresDBRepo) InsertTransaction(txn models.Transaction) (int, error) 
 	`
 
 	var id int
-	err := m.DB.QueryRowContext(ctx, stmt,
+	err := p.DB.QueryRowContext(ctx, stmt,
 		txn.Amount,
 		txn.Currency,
 		txn.PaymentIntent,
@@ -75,7 +117,7 @@ func (m *postgresDBRepo) InsertTransaction(txn models.Transaction) (int, error) 
 }
 
 // InsertOrder inserts new order to the database and returns its id
-func (m *postgresDBRepo) InsertOrder(order models.Order) (int, error) {
+func (p *postgresDBRepo) InsertOrder(order models.Order) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -85,7 +127,7 @@ func (m *postgresDBRepo) InsertOrder(order models.Order) (int, error) {
 	`
 
 	var id int
-	err := m.DB.QueryRowContext(ctx, stmt,
+	err := p.DB.QueryRowContext(ctx, stmt,
 		order.DatesID,
 		order.TransactionID,
 		order.CustomerID,
@@ -104,7 +146,7 @@ func (m *postgresDBRepo) InsertOrder(order models.Order) (int, error) {
 }
 
 // InsertCustomer inserts new customer to the database and returns its id
-func (m *postgresDBRepo) InsertCustomer(customer models.Customer) (int, error) {
+func (p *postgresDBRepo) InsertCustomer(customer models.Customer) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -114,7 +156,7 @@ func (m *postgresDBRepo) InsertCustomer(customer models.Customer) (int, error) {
 	`
 
 	var id int
-	err := m.DB.QueryRowContext(ctx, stmt,
+	err := p.DB.QueryRowContext(ctx, stmt,
 		customer.FirstName,
 		customer.LastName,
 		customer.Email,
@@ -136,7 +178,7 @@ func (m *postgresDBRepo) InsertCustomer(customer models.Customer) (int, error) {
 //if statusType == refunded, it will return list of refunded orders
 //if statusType == cancelled, it will return list of cancelled orders
 
-func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, error) {
+func (p *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -194,7 +236,7 @@ func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 		return orders, errors.New("invalid function parameter for the database function call")
 	}
 
-	rows, err = m.DB.QueryContext(ctx, query)
+	rows, err = p.DB.QueryContext(ctx, query)
 	if err != nil {
 		return orders, err
 	}
@@ -259,7 +301,7 @@ func (m *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 	return orders, nil
 }
 
-func (m *postgresDBRepo) GetOrdersHistoryPaginated(statusType string, pageSize, currentPageIndex int) ([]*models.Order, int, error) {
+func (p *postgresDBRepo) GetOrdersHistoryPaginated(statusType string, pageSize, currentPageIndex int) ([]*models.Order, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -337,7 +379,7 @@ func (m *postgresDBRepo) GetOrdersHistoryPaginated(statusType string, pageSize, 
 		newQuery = newQuery + ` WHERE d.is_recurring = 1`
 	}
 
-	rows, err = m.DB.QueryContext(ctx, query, pageSize, offset)
+	rows, err = p.DB.QueryContext(ctx, query, pageSize, offset)
 	if err != nil {
 		return orders, 0, err
 	}
@@ -399,7 +441,7 @@ func (m *postgresDBRepo) GetOrdersHistoryPaginated(statusType string, pageSize, 
 	}
 
 	var totalRecords int
-	countRow := m.DB.QueryRowContext(ctx, newQuery)
+	countRow := p.DB.QueryRowContext(ctx, newQuery)
 	err = countRow.Scan(&totalRecords)
 	if err != nil {
 		return orders, 0, err
@@ -407,7 +449,7 @@ func (m *postgresDBRepo) GetOrdersHistoryPaginated(statusType string, pageSize, 
 	return orders, totalRecords, nil
 }
 
-func (m *postgresDBRepo) UpdateOrderStatusID(id, statusID int) error {
+func (p *postgresDBRepo) UpdateOrderStatusID(id, statusID int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -417,7 +459,7 @@ func (m *postgresDBRepo) UpdateOrderStatusID(id, statusID int) error {
 		WHERE id = $3
 	`
 
-	_, err := m.DB.ExecContext(ctx, stmt, statusID, time.Now(), id)
+	_, err := p.DB.ExecContext(ctx, stmt, statusID, time.Now(), id)
 
 	return err
 }
@@ -429,7 +471,7 @@ func (m *postgresDBRepo) UpdateOrderStatusID(id, statusID int) error {
 //if statusType == refunded, it will return list of refunded orders
 //if statusType == cancelled, it will return list of cancelled orders
 
-func (m *postgresDBRepo) GetTransactionsHistory(statusType string) ([]*models.Transaction, error) {
+func (p *postgresDBRepo) GetTransactionsHistory(statusType string) ([]*models.Transaction, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -468,7 +510,7 @@ func (m *postgresDBRepo) GetTransactionsHistory(statusType string) ([]*models.Tr
 		query = query + ` WHERE t.id = ` + statusType + trails
 	}
 
-	rows, err = m.DB.QueryContext(ctx, query)
+	rows, err = p.DB.QueryContext(ctx, query)
 	if err != nil {
 		return transactions, err
 	}
@@ -500,7 +542,7 @@ func (m *postgresDBRepo) GetTransactionsHistory(statusType string) ([]*models.Tr
 	// return orders, errors.New("testing errors")
 	return transactions, nil
 }
-func (m *postgresDBRepo) GetTransactionsHistoryPaginated(statusType string, pageSize, currentPageIndex int) ([]*models.Transaction, int, error) {
+func (p *postgresDBRepo) GetTransactionsHistoryPaginated(statusType string, pageSize, currentPageIndex int) ([]*models.Transaction, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	offset := (currentPageIndex - 1) * pageSize
@@ -549,7 +591,7 @@ func (m *postgresDBRepo) GetTransactionsHistoryPaginated(statusType string, page
 		newQuery += ` WHERE t.transaction_status_id = 5`
 	}
 
-	rows, err = m.DB.QueryContext(ctx, query, pageSize, offset)
+	rows, err = p.DB.QueryContext(ctx, query, pageSize, offset)
 	if err != nil {
 		return transactions, 0, err
 	}
@@ -579,7 +621,7 @@ func (m *postgresDBRepo) GetTransactionsHistoryPaginated(statusType string, page
 	}
 
 	var totalRecords int
-	countRow := m.DB.QueryRowContext(ctx, newQuery)
+	countRow := p.DB.QueryRowContext(ctx, newQuery)
 	err = countRow.Scan(&totalRecords)
 	if err != nil {
 		return transactions, 0, err
@@ -588,7 +630,7 @@ func (m *postgresDBRepo) GetTransactionsHistoryPaginated(statusType string, page
 }
 
 // UpdateTransactionStatus update the status id for a transaction
-func (m *postgresDBRepo) UpdateTransactionStatusID(id, statusID int) error {
+func (p *postgresDBRepo) UpdateTransactionStatusID(id, statusID int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -598,14 +640,14 @@ func (m *postgresDBRepo) UpdateTransactionStatusID(id, statusID int) error {
 		WHERE id = $3
 	`
 
-	_, err := m.DB.ExecContext(ctx, stmt, statusID, time.Now(), id)
+	_, err := p.DB.ExecContext(ctx, stmt, statusID, time.Now(), id)
 
 	return err
 }
 
 // Database Functions that relates to User Account activity
 // GetUserbyUserName gets a user by userName
-func (m *postgresDBRepo) GetUserDetails(index, paramType string) (models.User, error) {
+func (p *postgresDBRepo) GetUserDetails(index, paramType string) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -618,7 +660,7 @@ func (m *postgresDBRepo) GetUserDetails(index, paramType string) (models.User, e
 		SELECT id, user_name, first_name, last_name, email, password, coalesce(image_link, ''), created_at, updated_at
 		FROM users
 		WHERE ` + paramType + ` = $1`
-	row := m.DB.QueryRowContext(ctx, query, index)
+	row := p.DB.QueryRowContext(ctx, query, index)
 
 	err := row.Scan(
 		&u.ID,
@@ -634,30 +676,26 @@ func (m *postgresDBRepo) GetUserDetails(index, paramType string) (models.User, e
 	return u, err
 }
 
-// UpdatePasswordByUserID updates account password for a user
-func (m *postgresDBRepo) UpdatePasswordByUserID(id, newPassword string) error {
+// UpdateUserPasswordByID updates account password for a user
+func (p *postgresDBRepo) UpdateUserPasswordByID(userType, id, newPassword string) error{
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	stmt := `
-		UPDATE 
-			users 
-		SET 
-			password= $1
-		WHERE id= $2`
+	stmt := fmt.Sprintf("UPDATE	%s SET password=$1	WHERE id=$2", userType)
 
-	_, err := m.DB.ExecContext(ctx, stmt, newPassword, id)
+	_, err := p.DB.ExecContext(ctx, stmt, newPassword, id)
+
 	return err
 }
 
 // Function that relates to the Token
 // InsertToken inserts token to database
-func (m *postgresDBRepo) InsertToken(t *models.Token, u models.User) error {
+func (p *postgresDBRepo) InsertToken(t *models.Token, u models.User) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	//Delete existing tokens for the user
 	stmt := `DELETE FROM tokens WHERE user_id = $1`
-	_, err := m.DB.ExecContext(ctx, stmt, u.ID)
+	_, err := p.DB.ExecContext(ctx, stmt, u.ID)
 	if err != nil {
 		return err
 	}
@@ -666,7 +704,7 @@ func (m *postgresDBRepo) InsertToken(t *models.Token, u models.User) error {
 		INSERT INTO tokens (user_id, name, email, token_hash, expiry, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
-	_, err = m.DB.ExecContext(ctx, stmt, //not bothering about the result
+	_, err = p.DB.ExecContext(ctx, stmt, //not bothering about the result
 		u.ID,
 		u.FirstName,
 		u.Email,
@@ -680,7 +718,7 @@ func (m *postgresDBRepo) InsertToken(t *models.Token, u models.User) error {
 }
 
 // GetUserbyToken returns user info from tokens table
-func (m *postgresDBRepo) GetUserbyToken(token string) (*models.User, error) {
+func (p *postgresDBRepo) GetUserbyToken(token string) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -696,7 +734,7 @@ func (m *postgresDBRepo) GetUserbyToken(token string) (*models.User, error) {
 				AND t.expiry > $2
 	`
 
-	row := m.DB.QueryRowContext(ctx, query, tokenHash[:], time.Now())
+	row := p.DB.QueryRowContext(ctx, query, tokenHash[:], time.Now())
 
 	err = row.Scan(
 		&u.ID,
@@ -718,7 +756,7 @@ func (m *postgresDBRepo) GetUserbyToken(token string) (*models.User, error) {
 // if index == active, it will return list of active profiles
 // if index == deactive, it will return list of deactive profiles
 // if index is a type of int, it will return customer profile corresponds to id = index
-func (m *postgresDBRepo) GetCustomerProfile(index string) ([]*models.Customer, error) {
+func (p *postgresDBRepo) GetCustomerProfile(index string) ([]*models.Customer, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -748,7 +786,7 @@ func (m *postgresDBRepo) GetCustomerProfile(index string) ([]*models.Customer, e
 
 	}
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	rows, err := p.DB.QueryContext(ctx, query)
 	if err != nil {
 		return customers, err
 	}
@@ -777,8 +815,36 @@ func (m *postgresDBRepo) GetCustomerProfile(index string) ([]*models.Customer, e
 }
 
 // Database Functions that is related to Employee Account Activity
+
+//UserPreRegistration register a new employee to the database
+func (p *postgresDBRepo) UserPreRegistration(userType, firstName, lastName, email, mobile string) (int , error){
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := fmt.Sprintf(`
+		INSERT INTO %s (first_name, last_name, email, mobile, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6) returning id
+	`, userType)
+
+	var id int
+	err := p.DB.QueryRowContext(ctx, stmt,
+		firstName,
+		lastName,
+		email,
+		mobile,
+		time.Now(),
+		time.Now(),
+	).Scan(&id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
 // GetEmployeeDetails retrive detailed info about an employee
-func (m *postgresDBRepo) GetEmployeeByID(id int) (models.Employee, error) {
+func (p *postgresDBRepo) GetEmployeeByID(id int) (models.Employee, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -795,7 +861,7 @@ func (m *postgresDBRepo) GetEmployeeByID(id int) (models.Employee, error) {
 			e.id = $1
 		`
 
-	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+	err := p.DB.QueryRowContext(ctx, query, id).Scan(
 		&employee.ID,
 		&employee.UserName,
 		&employee.FirstName,
@@ -830,7 +896,7 @@ func (m *postgresDBRepo) GetEmployeeByID(id int) (models.Employee, error) {
 // if accountType == ex, it will return list of all ex-employee account
 // if accountType == suspended, it will return list of suspended employee's account
 // if accountType == resigned, it will return list of resigned employee's account
-func (m *postgresDBRepo) GetEmployeeListPaginated(accountType string, pageSize, currentPageIndex int) ([]*models.Employee, int, error) {
+func (p *postgresDBRepo) GetEmployeeListPaginated(accountType string, pageSize, currentPageIndex int) ([]*models.Employee, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	offset := (currentPageIndex - 1) * pageSize
@@ -875,7 +941,7 @@ func (m *postgresDBRepo) GetEmployeeListPaginated(accountType string, pageSize, 
 		return employees, 0, errors.New("please enter correct parameter to get employees list")
 	}
 
-	rows, err = m.DB.QueryContext(ctx, query, pageSize, offset)
+	rows, err = p.DB.QueryContext(ctx, query, pageSize, offset)
 	if err != nil {
 		return employees, 0, err
 	}
@@ -901,7 +967,7 @@ func (m *postgresDBRepo) GetEmployeeListPaginated(accountType string, pageSize, 
 	}
 
 	var totalRecords int
-	countRow := m.DB.QueryRowContext(ctx, newQuery)
+	countRow := p.DB.QueryRowContext(ctx, newQuery)
 	err = countRow.Scan(&totalRecords)
 	if err != nil {
 		return employees, 0, err
@@ -909,7 +975,7 @@ func (m *postgresDBRepo) GetEmployeeListPaginated(accountType string, pageSize, 
 	return employees, totalRecords, nil
 }
 //UpdateEmployeeAccountStatus updates the account status of an employee
-func (m *postgresDBRepo) UpdateEmployeeAccountStatusByID(id, accountStatusID int) error {
+func (p *postgresDBRepo) UpdateEmployeeAccountStatusByID(id, accountStatusID int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	stmt := `
@@ -917,6 +983,6 @@ func (m *postgresDBRepo) UpdateEmployeeAccountStatusByID(id, accountStatusID int
 		SET account_status_id = $1, updated_at = $2
 		WHERE id = $3
 	`
-	_, err := m.DB.ExecContext(ctx, stmt, accountStatusID, time.Now(), id)
+	_, err := p.DB.ExecContext(ctx, stmt, accountStatusID, time.Now(), id)
 	return err
 }

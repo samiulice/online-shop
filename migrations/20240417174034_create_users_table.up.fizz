@@ -4,8 +4,9 @@ create_table("users") {
     t.Column("first_name", "string", {"default": ""})
     t.Column("last_name", "string", {"default": ""})
     t.Column("email", "string", {"default": ""})
+    t.Column("mobile", "string", {"default": ""})
     t.Column("password", "string", {"default": ""})
-    t.Column("image_link", "string", {"default": ""})
+    t.Column("image_link", "string", {"default": "user.png"})
     t.Column("created_at", "timestamptz", {})
     t.Column("updated_at", "timestamptz", {})
 }

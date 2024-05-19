@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"online_store/internal/models"
+	"regexp"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -107,4 +108,15 @@ func (app *application) passwordMatchers (hashPassword, password string) (bool, 
 		}		
 	}
 	return true, nil
+}
+
+// MatchMobileNumberPattern checks if the given number matches the provided regex pattern
+func(app *application) MatchMobileNumberPattern(input, pattern string) bool {
+	matched, err := regexp.MatchString(pattern, input)
+	if err != nil {
+		// Handle error if the regex is invalid
+		println("Error matching regex:", err)
+		return false
+	}
+	return matched
 }

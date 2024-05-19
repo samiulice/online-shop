@@ -29,7 +29,9 @@ CREATE TABLE public.customers (
     first_name character varying(255) DEFAULT ''::character varying NOT NULL,
     last_name character varying(255) DEFAULT ''::character varying NOT NULL,
     email character varying(255) DEFAULT ''::character varying NOT NULL,
-    image_link character varying(255) DEFAULT ''::character varying NOT NULL,
+    password character varying(255) DEFAULT ''::character varying NOT NULL,
+    mobile character varying(255) DEFAULT ''::character varying NOT NULL,
+    image_link character varying(255) DEFAULT 'user.png'::character varying NOT NULL,
     account_status integer DEFAULT 1 NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
@@ -75,7 +77,7 @@ CREATE TABLE public.dates (
     package_weight integer NOT NULL,
     package_price integer NOT NULL,
     stock_level integer NOT NULL,
-    image_link character varying(255) DEFAULT ''::character varying NOT NULL,
+    image_link character varying(255) DEFAULT 'user.png'::character varying NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
     image character varying(255) DEFAULT ''::character varying NOT NULL
@@ -427,8 +429,9 @@ CREATE TABLE public.users (
     first_name character varying(255) DEFAULT ''::character varying NOT NULL,
     last_name character varying(255) DEFAULT ''::character varying NOT NULL,
     email character varying(255) DEFAULT ''::character varying NOT NULL,
+    mobile character varying(255) DEFAULT ''::character varying NOT NULL,
     password character varying(255) DEFAULT ''::character varying NOT NULL,
-    image_link character varying(255) DEFAULT ''::character varying NOT NULL,
+    image_link character varying(255) DEFAULT 'user.png'::character varying NOT NULL,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
 );
