@@ -14,20 +14,20 @@
   <!-- /Title of the page -->
 
   <!-- Bootstrap -->
-  <link href="/admin/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/public/admin/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome -->
-  <link href="/admin/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+  <link href="/public/admin/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
   <!-- NProgress -->
-  <link href="/admin/vendors/nprogress/nprogress.css" rel="stylesheet">
+  <link href="/public/admin/vendors/nprogress/nprogress.css" rel="stylesheet">
   <!-- iCheck -->
-  <link href="/admin/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
+  <link href="/public/admin/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
 
   <!-- bootstrap-progressbar -->
-  <link href="/admin/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css" rel="stylesheet">
+  <link href="/public/admin/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css" rel="stylesheet">
   <!-- JQVMap -->
-  <link href="/admin/vendors/jqvmap/dist/jqvmap.min.css" rel="stylesheet" />
+  <link href="/public/admin/vendors/jqvmap/dist/jqvmap.min.css" rel="stylesheet" />
   <!-- bootstrap-daterangepicker -->
-  <link href="/admin/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
+  <link href="/public/admin/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
   <!-- DataTables -->
   <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
 
@@ -74,7 +74,7 @@
           <!-- menu profile quick info -->
           <div class="profile clearfix">
             <div class="profile_pic">
-              <a href="/admin/general/profile/view-profile-info"><img src="/admin/images/{{.User.ImageLink}}" alt="..." class="img-circle profile_img"></a>
+              <a href="/admin/general/profile/view"><img src="/admin/images/{{.User.ImageLink}}" alt="..." class="img-circle profile_img"></a>
             </div>
             <div class="profile_info">
               <span>Welcome,</span>
@@ -238,13 +238,14 @@
                   <span class=" fa fa-angle-down"></span>
                 </a>
                 <ul class="dropdown-menu dropdown-usermenu pull-right">
-                  <li><a href="/admin/general/profile/view-profile-info"> Profile</a></li>
+                  <li><a href="/admin/general/profile/view"> Profile</a></li>
                   <li>
                     <a href="javascript:;">
                       <span class="badge bg-red pull-right">50%</span>
                       <span>Settings</span>
                     </a>
                   </li>
+                  <li><a href="/">Go to Public Site</a></li>
                   <li><a href="javascript:;">Help</a></li>
                   <li><a href="/signout"><i class="fa fa-sign-out pull-right"></i> Log Out</a></li>
                 </ul>
@@ -337,45 +338,45 @@
   </div>
 
   <!-- jQuery -->
-  <script src="/admin/vendors/jquery/dist/jquery.min.js"></script>
+  <script src="/public/admin/vendors/jquery/dist/jquery.min.js"></script>
   <!-- Bootstrap -->
-  <script src="/admin/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="/public/admin/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
   <!-- FastClick -->
-  <script src="/admin/vendors/fastclick/lib/fastclick.js"></script>
+  <script src="/public/admin/vendors/fastclick/lib/fastclick.js"></script>
   <!-- NProgress -->
-  <script src="/admin/vendors/nprogress/nprogress.js"></script>
+  <script src="/public/admin/vendors/nprogress/nprogress.js"></script>
   <!-- Chart.js -->
-  <script src="/admin/vendors/Chart.js/dist/Chart.min.js"></script>
+  <script src="/public/admin/vendors/Chart.js/dist/Chart.min.js"></script>
   <!-- gauge.js -->
-  <script src="/admin/vendors/gauge.js/dist/gauge.min.js"></script>
+  <script src="/public/admin/vendors/gauge.js/dist/gauge.min.js"></script>
   <!-- bootstrap-progressbar -->
-  <script src="/admin/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
+  <script src="/public/admin/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
   <!-- iCheck -->
-  <script src="/admin/vendors/iCheck/icheck.min.js"></script>
+  <script src="/public/admin/vendors/iCheck/icheck.min.js"></script>
   <!-- Skycons -->
-  <script src="/admin/vendors/skycons/skycons.js"></script>
+  <script src="/public/admin/vendors/skycons/skycons.js"></script>
   <!-- Flot -->
-  <script src="/admin/vendors/Flot/jquery.flot.js"></script>
-  <script src="/admin/vendors/Flot/jquery.flot.pie.js"></script>
-  <script src="/admin/vendors/Flot/jquery.flot.time.js"></script>
-  <script src="/admin/vendors/Flot/jquery.flot.stack.js"></script>
-  <script src="/admin/vendors/Flot/jquery.flot.resize.js"></script>
+  <script src="/public/admin/vendors/Flot/jquery.flot.js"></script>
+  <script src="/public/admin/vendors/Flot/jquery.flot.pie.js"></script>
+  <script src="/public/admin/vendors/Flot/jquery.flot.time.js"></script>
+  <script src="/public/admin/vendors/Flot/jquery.flot.stack.js"></script>
+  <script src="/public/admin/vendors/Flot/jquery.flot.resize.js"></script>
   <!-- Flot plugins -->
-  <script src="/admin/vendors/flot.orderbars/js/jquery.flot.orderBars.js"></script>
-  <script src="/admin/vendors/flot-spline/js/jquery.flot.spline.min.js"></script>
-  <script src="/admin/vendors/flot.curvedlines/curvedLines.js"></script>
+  <script src="/public/admin/vendors/flot.orderbars/js/jquery.flot.orderBars.js"></script>
+  <script src="/public/admin/vendors/flot-spline/js/jquery.flot.spline.min.js"></script>
+  <script src="/public/admin/vendors/flot.curvedlines/curvedLines.js"></script>
   <!-- DateJS -->
-  <script src="/admin/vendors/DateJS/build/date.js"></script>
+  <script src="/public/admin/vendors/DateJS/build/date.js"></script>
   <!-- JQVMap -->
-  <script src="/admin/vendors/jqvmap/dist/jquery.vmap.js"></script>
-  <script src="/admin/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
-  <script src="/admin/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
+  <script src="/public/admin/vendors/jqvmap/dist/jquery.vmap.js"></script>
+  <script src="/public/admin/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
+  <script src="/public/admin/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
   <!-- bootstrap-daterangepicker -->
-  <script src="/admin/vendors/moment/min/moment.min.js"></script>
-  <script src="/admin/vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
+  <script src="/public/admin/vendors/moment/min/moment.min.js"></script>
+  <script src="/public/admin/vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
   <!-- Datatables -->
   <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
-  <script src="/admin/vendors/validator/validator.js"></script>
+  <script src="/public/admin/vendors/validator/validator.js"></script>
   <!-- Custom Theme Scripts -->
   <script src="/admin/build/js/custom.min.js"></script>
   <script src="/admin/build/js/app.js"></script>

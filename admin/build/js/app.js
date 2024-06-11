@@ -121,6 +121,7 @@ function checkAuth() {
     return
   } else {
     let token = localStorage.getItem("token");
+    console.log(token)
     const myHeader = new Headers();
     myHeader.append("Content-Type", "application/json");
     myHeader.append("Authorization", "Bearer " + token);
@@ -135,7 +136,7 @@ function checkAuth() {
       .then(function (data) {
         if (data.error === true) {
           console.log("not logged in");
-          location.href = "/signin"
+          // location.href = "/signin"
         } else {
           console.log("logged in");
         }
@@ -164,8 +165,6 @@ function toggleFullScreen() {
 }
 
 function copyToClipboard(cpyBtn, copyText) {
-
- 
   const textToCopy = getElementContent(copyText);
   const tooltip = document.getElementById(cpyBtn);
 

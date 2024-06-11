@@ -1,127 +1,146 @@
 {{template "base" .}}
 
 {{define "title"}}
-    Buy Dates
-{{end}}
-
-{{define "css"}}
-<link rel="stylesheet" href="/public/assets/css/style.css">
+Buy Hiking Boots
 {{end}}
 
 {{define "content"}}
-{{$date := index .Data "dates"}}
+{{$prod := index .Data "product"}}
 <div class="container">
-    <div class="row mt-3 d-flex justify-content-center">
-        <div class="col-md-3">
-            <div class="card" style="width: 18rem;">
-                <img src="/public/assets/images/{{$date.ImageLink}}" class="card-img-top" alt="{{$date.Name}}">
-                <div class="card-body">
-                    <h5 class="card-title text-center">{{$date.Name}}</h5>
-                    <p class="card-text">{{$date.Description}}</p>
-                    <p class="card-text"><small class="text-body-secondary">Last updated: {{formatDate $date.UpdatedAt "02-Jan-2006"}}</small></p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card" style="width: 18rem;">
-                <div class="card-body">
-                    <h5 class="card-title text-center">Package Details:</h5>
-                </div>
-                <hr>
-                <table class="table table-primary table-hover">
-                    <tbody>
-                        <tr>
-                            <th>Plan:</th>
-                            <td>{{$date.PlanTitle}}</td>
-                        </tr>
-                        <tr>
-                            <th>Name:</th>
-                            <td>{{$date.Name}}</td>
-                        </tr>
-                        <tr>
-                            <th>Plan Description:</th>
-                            <td>{{$date.PlanDescription}}</td>
-                        </tr>
-                        <tr>
-                            <th>Package Weight:</th>
-                            <td>{{$date.PackageWeight}}KG</td>
-                        </tr>
-                        <tr>
-                            <th>Package Price:</th>
-                            <td>{{formatCurrency $date.PackagePrice}}</td>  
-                        </tr>                
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="row mt-5 d-flex justify-content-center" >
-        <div class="col-md-6">
-            <div class="col">
-                <h5 class="text-center">Buy Now</h5>
-                <div class="alert alert-danger text-center d-none" id="card-messages"></div>
-                <form action="/payment-succeeded"  method="post"
-                    name="charge_form" id="charge_form"
-                    class="d-block needs-validation charge-form" autocomplete="off" novalidate="">
-                    
-                    <input type="hidden" id="amount" name="amount" value="{{$date.PackagePrice}}">
-                    <input type="hidden" id="package_id" name="package_id" value="{{$date.ID}}">
-                    <input type="hidden" id="package_quantity" name="package_quantity" value="{{$date.PackageWeight}}">
-                    <div class="mb-3">
-                        <label for="first_name" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="first_name" name="first_name" 
-                            required="" autocomplete="first_name-new">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="last_name" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="last_name" name="last_name" 
-                            required="" autocomplete="last_name-new">
-                    </div>
-        
-                    <div class="mb-3">
-                        <label for="cardholder_email" class="form-label">Card Holder Email</label>
-                        <input type="text" class="form-control" id="cardholder_email" name="cardholder_email" 
-                            required="" autocomplete="cardholder_email-new">
-                    </div>
-        
-                    <div class="mb-3">
-                        <label for="cardholder_name" class="form-label">Name on Card</label>
-                        <input type="text" class="form-control" id="cardholder_name" name="cardholder_name" 
-                            required="" autocomplete="cardholder_name-new">
-                    </div>
-                    
-                    <!-- card number will be built by stripe -->
-                    <div class="mb-3">
-                        <label for="card-element" class="form-label">Credit Card</label>
-                        <div id="card-element" class="form-control"></div>
-                        <div class="alert-danger text-center" id="card-errors" role="alert"></div>
-                        <div class="alert-success text-center" id="card-success" role="alert"></div>
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-center">
-                        <a href="javascript:void(0)" id="pay-button" class="btn btn-primary" onclick="val()">Validate & Charge Card</a>
-                        <div id="processing-payment" class="text-center d-none">
-                            <div class="spinner-border text-success" role="status">
-                                <span class="visually-hidden">Processing...</span>
-                            </div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_content">
+                    <div class="col-md-5 col-sm-5 col-xs-10" style="border: 1px solid rgb(18, 163, 247); border-radius: 10px;">
+                        <div class="product-image">
+                            <img 
+                                src="/public/admin/images/products/{{$prod.ImageLink}}" alt="..." />
+                        </div>
+                        <div class="product_gallery">
+                            <a>
+                                <img src="/public/admin/images/products/prod-2.jpg" alt="..." />
+                            </a>
+                            <a>
+                                <img src="/public/admin/images/products/prod-3.jpg" alt="..." />
+                            </a>
+                            <a>
+                                <img src="/public/admin/images/products/prod-4.jpg" alt="..." />
+                            </a>
+                            <a>
+                                <img src="/public/admin/images/products/prod-5.jpg" alt="..." />
+                            </a>
                         </div>
                     </div>
-        
-                    <!-- hidden fields -->
-                    <input type="hidden" name="payment_intent" id="payment_intent">
-                    <input type="hidden" name="payment_method" id="payment_method">
-                    <input type="hidden" name="payment_amount" id="payment_amount">
-                    <input type="hidden" name="payment_currency" id="payment_currency">
-                </form>
+                    <div class="col-md-1 col-sm-1 col-xs-0 m" style="border:0px solid #0c0c0c;"></div>
+
+                    <div class="col-md-6 col-sm-6 col-xs-12 m" style="border:0px solid #e5e5e5;">
+
+                        <h3 class="prod_title">{{$prod.Name}}</h3>
+
+                        <p>{{$prod.Description}}</p>
+                        <br />
+                            <div class="col-md-6 col-sm-6 col-xs-6">
+                                <div class="">
+                                    <h2>Package Details</h2>
+                                    <ul class="">
+                                        <li>
+                                            <p>Plan: {{$prod.PlanTitle}}</p>
+                                        </li>
+                                        <li>
+                                            <p>Weight: {{$prod.PackageWeight}}</p>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <br />
+                            </div>
+                            <div class="col-md-6 col-sm-6 col-xs-6">
+                                <div class="">
+                                    <div class="product_price">
+                                        <h1 class="price">{{formatCurrency $prod.PackagePrice}}</h1>
+                                        <span class="price-tax">Ex Tax: {{formatCurrency $prod.PackagePrice}}</span>
+                                        <br>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-7 col-sm-12 col-xs-12">
+                                <div class="col">
+                                    <h5 class="text-center">Buy Now</h5>
+                                    <div class="alert alert-danger text-center d-none" id="card-messages"></div>
+                                    <form action="/payment-succeeded" method="post" name="charge_form" id="charge_form"
+                                        class="d-block needs-validation charge-form" autocomplete="off" novalidate="">
+                    
+                                        <input type="hidden" id="amount" name="amount" value="{{$prod.PackagePrice}}">
+                                        <input type="hidden" id="package_id" name="package_id" value="{{$prod.ID}}">
+                                        <input type="hidden" id="package_quantity" name="package_quantity" value="{{$prod.PackageWeight}}">
+                                        <div class="row">
+                                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                                <div class="mb-3">
+                                                    <label for="first_name" class="form-label">First Name</label>
+                                                    <input type="text" class="form-control" id="first_name" name="first_name" required=""
+                                                        autocomplete="first_name-new">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                                <div class="mb-3">
+                                                    <label for="last_name" class="form-label">Last Name</label>
+                                                    <input type="text" class="form-control" id="last_name" name="last_name" required=""
+                                                        autocomplete="last_name-new">
+                                                </div>
+                                            </div>
+                                        </div>
+                    
+                                        <div class="mb-3">
+                                            <label for="cardholder_email" class="form-label">Card Holder Email</label>
+                                            <input type="text" class="form-control" id="cardholder_email" name="cardholder_email"
+                                                required="" autocomplete="cardholder_email-new">
+                                        </div>
+                    
+                                        <div class="mb-3">
+                                            <label for="cardholder_name" class="form-label">Name on Card</label>
+                                            <input type="text" class="form-control" id="cardholder_name" name="cardholder_name" required=""
+                                                autocomplete="cardholder_name-new">
+                                        </div>
+                    
+                                        <!-- card number will be built by stripe -->
+                                        <div class="mb-3">
+                                            <label for="card-element" class="form-label">Credit Card</label>
+                                            <div id="card-element" class="form-control"></div>
+                                            <div class="alert-danger text-center" id="card-errors" role="alert"></div>
+                                            <div class="alert-success text-center" id="card-success" role="alert"></div>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-center">
+                                            <a href="javascript:void(0)" id="pay-button" class="btn btn-primary" onclick="val()">Validate &
+                                                Charge Card</a>
+                                            <div id="processing-payment" class="text-center d-none">
+                                                <div class="spinner-border text-success" role="status">
+                                                    <span class="visually-hidden">Processing...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                    
+                                        <!-- hidden fields -->
+                                        <input type="hidden" name="payment_intent" id="payment_intent">
+                                        <input type="hidden" name="payment_method" id="payment_method">
+                                        <input type="hidden" name="payment_amount" id="payment_amount">
+                                        <input type="hidden" name="payment_currency" id="payment_currency">
+                                    </form>
+                                </div>
+                            </div>
+                            <!-- <div class="col-md-3 col-sm-2 col-xs-1"></div> -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
 </div>
 
-   
+
 {{end}}
 
 {{define "js"}}
-    {{template "stripe-js-one-off" .}}
+{{template "stripe-js-one-off" .}}
 {{end}}

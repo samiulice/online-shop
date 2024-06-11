@@ -107,11 +107,11 @@
 {{define "js"}}
 {{$v := index .Data "employee-list-type"}}
 <script>
+    let token = localStorage.getItem("token");
     let currentPageIndex = 1;
     let pageSize = 5; // Set initial page size
-    let list = {{$v}}
+    let list = {{$v}};
     function updatePage(pSize, cpIndex) {
-        let token = localStorage.getItem("token")
         let table = document.getElementById("employee_list");
         let tbody = table.getElementsByTagName("tbody")[0];
         tbody.innerHTML = '';
@@ -135,7 +135,11 @@
             .then(function (data) {
                 if (data) {
                     if (Object.keys(data)[0] === "error") {
-                        checkError(data)
+                        setTimeout(() => {
+                            checkError(data)
+                            console.log(data.error)
+                            console.log(data.message)
+                        }, 5000);
                         return;
                     }
 

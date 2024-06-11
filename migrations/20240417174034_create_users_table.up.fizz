@@ -1,4 +1,4 @@
-create_table("users") {
+create_table("admins") {
     t.Column("id", "integer", {primary: true})
     t.Column("user_name", "string", {"default": ""})
     t.Column("first_name", "string", {"default": ""})
@@ -7,6 +7,7 @@ create_table("users") {
     t.Column("mobile", "string", {"default": ""})
     t.Column("password", "string", {"default": ""})
     t.Column("image_link", "string", {"default": "user.png"})
+    t.Column("account_status_id", "integer", {"default": 1})
     t.Column("created_at", "timestamptz", {})
     t.Column("updated_at", "timestamptz", {})
 }

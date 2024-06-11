@@ -34,10 +34,9 @@ func (app *application) routes() http.Handler {
 	mux.Get("/test", app.Test)
 
 	//Public file server
-	publicFileServer := http.FileServer(http.Dir("./public/assets"))
-	publicFileServer2 := http.FileServer(http.Dir("./public/admin"))
-	mux.Handle("/public/assets/*", http.StripPrefix("/public/assets", publicFileServer))
-	mux.Handle("/public/admin/*", http.StripPrefix("/public/admin", publicFileServer2))
+	
+	publicFileServer := http.FileServer(http.Dir("./public/admin"))
+	mux.Handle("/public/admin/*", http.StripPrefix("/public/admin", publicFileServer))
 
 	//secure routes
 	mux.Route("/admin", func(mux chi.Router) {
@@ -73,6 +72,19 @@ func (app *application) routes() http.Handler {
 		//Admin file server
 		publicFileServer := http.FileServer(http.Dir("./"))
 		mux.Handle("/*", http.StripPrefix("/", publicFileServer))
+	})
+
+	// Secure routes for employees
+	mux.Route("/employee", func(mux chi.Router) {
+		mux.Use(app.Auth)
+		mux.Get("/dashboard", app.EmployeeDashboard)
+
+		// 404 not found route for employee section
+		mux.NotFound(app.PageNotFound)
+
+		// Employee file server
+		employeeFileServer := http.FileServer(http.Dir("./public"))
+		mux.Handle("/*", http.StripPrefix("/", employeeFileServer))
 	})
 
 	return mux

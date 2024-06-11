@@ -151,12 +151,13 @@ func (p *postgresDBRepo) InsertCustomer(customer models.Customer) (int, error) {
 	defer cancel()
 
 	stmt := `
-		INSERT INTO customers (first_name, last_name, email, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5) returning id
+		INSERT INTO customers (user_name, first_name, last_name, email, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6) returning id
 	`
 
 	var id int
 	err := p.DB.QueryRowContext(ctx, stmt,
+		customer.UserName,
 		customer.FirstName,
 		customer.LastName,
 		customer.Email,
@@ -190,9 +191,9 @@ func (p *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 			o.amount, o.created_at, o.updated_at, d.id, d.name, d.description, d.is_recurring,
 			d.plan_id, d.plan_title, d.plan_description, d.package_weight, d.package_price,
 			d.stock_level, d.image_link, d.created_at, d.updated_at, t.id, t.amount, t.currency,
-			t.payment_intent, payment_method, t.last_four_digits, t.bank_return_code, 
+			t.payment_intent, t.payment_method, t.last_four_digits, t.bank_return_code, 
 			t.transaction_status_id, t.expiry_month, t.expiry_year, t.created_at, t.updated_at,
-			 ts.name, c.id, c.first_name, c.last_name, c.email, c.image_link, c.created_at, c.updated_at
+			 ts.name, c.id, c.user_name, c.first_name, c.last_name, c.email, c.image_link, c.created_at, c.updated_at
 		FROM
 			orders o
 			LEFT JOIN dates d on (o.dates_id = d.id)
@@ -284,6 +285,7 @@ func (p *postgresDBRepo) GetOrdersHistory(statusType string) ([]*models.Order, e
 			&o.Transaction.TransactionStatus,
 
 			&o.Customer.ID,
+			&o.Customer.UserName,
 			&o.Customer.FirstName,
 			&o.Customer.LastName,
 			&o.Customer.Email,
@@ -315,9 +317,9 @@ func (p *postgresDBRepo) GetOrdersHistoryPaginated(statusType string, pageSize, 
 			o.amount, o.created_at, o.updated_at, d.id, d.name, d.description, d.is_recurring,
 			d.plan_id, d.plan_title, d.plan_description, d.package_weight, d.package_price,
 			d.stock_level, d.image_link, d.created_at, d.updated_at, t.id, t.amount, t.currency,
-			t.payment_intent, payment_method, t.last_four_digits, t.bank_return_code, 
+			t.payment_intent, t.payment_method, t.last_four_digits, t.bank_return_code, 
 			t.transaction_status_id, t.expiry_month, t.expiry_year, t.created_at, t.updated_at,
-			 ts.name, c.id, c.first_name, c.last_name, c.email, c.image_link, c.created_at, c.updated_at
+			 ts.name, c.id, c.user_name, c.first_name, c.last_name, c.email, c.image_link, c.created_at, c.updated_at
 		FROM
 			orders o
 			LEFT JOIN dates d on (o.dates_id = d.id)
@@ -427,6 +429,7 @@ func (p *postgresDBRepo) GetOrdersHistoryPaginated(statusType string, pageSize, 
 			&o.Transaction.TransactionStatus,
 
 			&o.Customer.ID,
+			&o.Customer.UserName,
 			&o.Customer.FirstName,
 			&o.Customer.LastName,
 			&o.Customer.Email,
@@ -647,7 +650,7 @@ func (p *postgresDBRepo) UpdateTransactionStatusID(id, statusID int) error {
 
 // Database Functions that relates to User Account activity
 // GetUserbyUserName gets a user by userName
-func (p *postgresDBRepo) GetUserDetails(index, paramType string) (models.User, error) {
+func (p *postgresDBRepo) GetUserDetails(index, paramType, account_type string) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -658,8 +661,8 @@ func (p *postgresDBRepo) GetUserDetails(index, paramType string) (models.User, e
 
 	query := `
 		SELECT id, user_name, first_name, last_name, email, password, coalesce(image_link, ''), created_at, updated_at
-		FROM users
-		WHERE ` + paramType + ` = $1`
+		FROM ` + account_type + `
+		 WHERE ` + paramType + ` = $1`
 	row := p.DB.QueryRowContext(ctx, query, index)
 
 	err := row.Scan(
@@ -688,26 +691,52 @@ func (p *postgresDBRepo) UpdateUserPasswordByID(userType, id, newPassword string
 }
 
 // Function that relates to the Token
+//GetUserInitialData returns models.UserInitialData for generating token
+func (p *postgresDBRepo) GetUserInitialData(userName, param, tableName string)(models.UserInitialData, error){
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var u models.UserInitialData
+	query := `
+	SELECT id, first_name, email, password, image_link, account_status_id, created_at, updated_at
+	FROM ` + tableName + ` WHERE ` + param + `= $1`
+
+	row := p.DB.QueryRowContext(ctx, query, userName)
+
+	err := row.Scan(
+		&u.UserID,
+		&u.Name,
+		&u.Email,
+		&u.Password,
+		&u.ImageLink,
+		&u.AccountStatusID,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+	return u, err
+}
+
+
 // InsertToken inserts token to database
-func (p *postgresDBRepo) InsertToken(t *models.Token, u models.User) error {
+func (p *postgresDBRepo) InsertToken(t *models.Token, u models.UserInitialData) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	//Delete existing tokens for the user
 	stmt := `DELETE FROM tokens WHERE user_id = $1`
-	_, err := p.DB.ExecContext(ctx, stmt, u.ID)
+	_, err := p.DB.ExecContext(ctx, stmt, u.UserID)
 	if err != nil {
 		return err
 	}
 
 	stmt = `
-		INSERT INTO tokens (user_id, name, email, token_hash, expiry, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO tokens (user_id, name, email, acc_type, token_hash, expiry, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 	_, err = p.DB.ExecContext(ctx, stmt, //not bothering about the result
-		u.ID,
-		u.FirstName,
+		u.UserID,
+		u.Name,
 		u.Email,
+		u.AccountType,
 		t.Hash,
 		t.Expiry,
 		time.Now(),
@@ -724,11 +753,15 @@ func (p *postgresDBRepo) GetUserbyToken(token string) (*models.User, error) {
 
 	tokenHash := sha256.Sum256([]byte(token))
 	var u models.User
-	var err error
+
+	accountType, err := p.GetAccountTypeByToken(token)
+	if err != nil {
+		return nil, err
+	}
 
 	query := `
 			SELECT u.id, u.first_name, u.last_name, u.email
-			FROM users u
+			FROM ` + accountType + ` u
 				INNER JOIN tokens t ON (u.id = t.user_id)
 			WHERE t.token_hash = $1
 				AND t.expiry > $2
@@ -748,6 +781,32 @@ func (p *postgresDBRepo) GetUserbyToken(token string) (*models.User, error) {
 	return &u, nil
 }
 
+// GetAccountTypeByToken returns account type of particular user from tokens table
+func (p *postgresDBRepo) GetAccountTypeByToken(token string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	tokenHash := sha256.Sum256([]byte(token))
+
+	var accountType string
+	var err error
+
+	query := `
+			SELECT acc_type 
+			FROM tokens 
+			WHERE token_hash = $1`
+
+	row := p.DB.QueryRowContext(ctx, query, tokenHash[:])
+
+	err = row.Scan(
+		&accountType,
+	)
+	if err != nil {
+		return accountType, err
+	}
+	return accountType, nil
+}
+
 // Database Functions that is related to Customer profile
 
 // GetCustomerProfile returns a slice of all customer's info.
@@ -764,7 +823,7 @@ func (p *postgresDBRepo) GetCustomerProfile(index string) ([]*models.Customer, e
 
 	query := `
 		SELECT 
-			id, first_name, last_name, email, image_link, account_status, created_at, updated_at
+			id, user_name, first_name, last_name, email, image_link, account_status, created_at, updated_at
 		FROM
 			customers
 		`
@@ -796,11 +855,12 @@ func (p *postgresDBRepo) GetCustomerProfile(index string) ([]*models.Customer, e
 		var c models.Customer
 		err = rows.Scan(
 			&c.ID,
+			&c.UserName,
 			&c.FirstName,
 			&c.LastName,
 			&c.Email,
 			&c.ImageLink,
-			&c.AccountStatus,
+			&c.AccountStatusID,
 			&c.CreatedAt,
 			&c.UpdatedAt,
 		)

@@ -1,1 +1,1 @@
-drop_table("users")
+drop_table("admins")

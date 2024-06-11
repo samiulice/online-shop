@@ -9,7 +9,8 @@ create_table("dates") {
     t.Column("package_weight", "integer", {})
     t.Column("package_price", "integer", {})
     t.Column("stock_level", "integer", {})
-    t.Column("image_link", "string", {"default": "user.png"})
+    t.Column("image_link", "string", {"default": "product.png"})
+    t.Column("image_gallery", "string", {"default": "product.png|product.png|product.png|product.png|"})
     t.Column("created_at", "timestamptz", {})
     t.Column("updated_at", "timestamptz", {})
 }

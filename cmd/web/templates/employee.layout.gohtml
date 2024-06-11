@@ -1,0 +1,311 @@
+{{define "employee"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!-- Meta, title, CSS, favicons, etc. -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Title of the page -->
+  <title>{{block "title" .}}{{end}}</title>
+  <!-- /Title of the page -->
+
+  <!-- Bootstrap -->
+  <link href="/employee/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="/employee/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+  <!-- NProgress -->
+  <link href="/employee/vendors/nprogress/nprogress.css" rel="stylesheet">
+  <!-- iCheck -->
+  <link href="/employee/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
+
+  <!-- bootstrap-progressbar -->
+  <link href="/employee/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css" rel="stylesheet">
+  <!-- JQVMap -->
+  <link href="/employee/vendors/jqvmap/dist/jqvmap.min.css" rel="stylesheet" />
+  <!-- bootstrap-daterangepicker -->
+  <link href="/employee/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
+
+  <!-- Custom Theme Style -->
+  <link href="/employee/build/css/custom.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  {{block "css" .}}{{end}}
+  <!-- /Custom CSS -->
+  <style>
+    /* Define the styles for the buttons */
+    .sidebar-footer a {
+      color: #333;
+      text-decoration: none;
+      display: inline-block;
+      padding: 5px;
+    }
+
+    /* Define the transition for color change */
+    .sidebar-footer a span {
+      transition: color .5s ease;
+    }
+
+    /* Define the styles for the buttons when hovered over */
+    .sidebar-footer a:hover span {
+      color: #FF5733;
+      /* Change color on hover */
+    }
+
+    .d-none {
+      display: none;
+    }
+  </style>
+</head>
+
+<body class="nav-md footer_fixed">
+  <div class="container body">
+    <div class="main_container">
+      <div class="col-md-3 left_col menu_fixed">
+        <div class="left_col scroll-view">
+          <div class="navbar nav_title" style="border: 0;">
+            <div class="site_title"><i class="fa fa-shield"></i><span>FreshCart</span></div>
+          </div>
+
+          <div class="clearfix"></div>
+
+          <!-- menu profile quick info -->
+          <div class="profile clearfix">
+            <div class="profile_pic">
+              <a href="/employee/dashboard"><img src="/employee/images/{{.User.ImageLink}}" alt="..."
+                  class="img-circle profile_img"></a>
+            </div>
+            <div class="profile_info">
+              <span>Welcome,</span>
+              <h2>{{.User.FirstName}}{{printf " %s" .User.LastName}}</h2>
+            </div>
+          </div>
+          <!-- /menu profile quick info -->
+
+          <br />
+
+          <!-- sidebar menu -->
+          <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+            <div class="menu_section">
+              <h3>General</h3>
+              <ul class="nav side-menu">
+                <li><a href="#/employee/dashboard"><i class="fa fa-shield"></i> Profile <span
+                      class="fa fa-chevron-down"></span></a>
+                  <ul class="nav child_menu">
+                    <li><a href="/employee/dashboard">Dashboard</a></li>
+                    <li><a href="#/employee/general/profile/edit">Update Profile</a></li>
+                    <li><a href="#/employee/dashboard/profile/task">Task</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+            <div class="menu_section">
+              <h3>Analytics</h3>
+              <ul class="nav side-menu">
+                <li><a><i class="fa fa-group"></i> Service History <span class="fa fa-chevron-down"></span></a>
+                  <ul class="nav child_menu">
+                    <li><a href="#/employee/analytics/Services/pending">Pending Services</a></li>
+                    <li><a href="#/employee/analytics/Services/completed">Completed Services</a></li>
+                    <li><a href="#/employee/analytics/Services/cancelled">Cancelled Services</a></li>
+                    <li><a href="#/employee/analytics/Services/all">All List</a></li>
+                  </ul>
+                </li>
+                <li><a><i class="fa fa-bank"></i> Payment History <span class="fa fa-chevron-down"></span></a>
+                  <ul class="nav child_menu">
+                    <li><a href="#/employee/analytics/payments/all">All Payments</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <!-- /sidebar menu -->
+
+          <!-- /menu footer buttons -->
+          <div class="sidebar-footer hidden-small">
+            <a data-toggle="tooltip" data-placement="top" title="Settings">
+              <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+            </a>
+            <a data-toggle="tooltip" data-placement="top" title="FullScreen" onclick="toggleFullScreen()">
+              <span id="screen-icon" class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
+            </a>
+            <a href="/" data-toggle="tooltip" data-placement="top" title="Public Site">
+              <span class="glyphicon glyphicon-globe" aria-hidden="true"></span>
+            </a>
+            <a data-toggle="tooltip" data-placement="top" title="Logout" href="/signout">
+              <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
+            </a>
+          </div>
+          <!-- /menu footer buttons -->
+        </div>
+      </div>
+
+      <!-- top navigation -->
+      <div class="top_nav">
+        <div class="nav_menu">
+          <nav>
+            <div class="nav toggle">
+              <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+            </div>
+
+            <ul class="nav navbar-nav navbar-right">
+              <li class="">
+                <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown"
+                  aria-expanded="false">
+                  <img src="/employee/images/{{.User.ImageLink}}" alt=""><b>{{.User.FirstName}}{{printf " %s"
+                    .User.LastName}}</b>
+                  <span class=" fa fa-angle-down"></span>
+                </a>
+                <ul class="dropdown-menu dropdown-usermenu pull-right">
+                  <li><a href="/employee/general/profile/view"> Profile</a></li>
+                  <li>
+                    <a href="javascript:;">
+                      <span class="badge bg-red pull-right">50%</span>
+                      <span>Settings</span>
+                    </a>
+                  </li>
+                  <li><a href="javascript:;">Help</a></li>
+                  <li><a href="/signout"><i class="fa fa-sign-out pull-right"></i> Log Out</a></li>
+                </ul>
+              </li>
+
+              <li role="presentation" class="dropdown">
+                <a href="javascript:;" class="dropdown-toggle info-number" data-toggle="dropdown" aria-expanded="false">
+                  <i class="fa fa-envelope-o"></i>
+                  <span class="badge bg-green">6</span>
+                </a>
+                <ul id="menu1" class="dropdown-menu list-unstyled msg_list" role="menu">
+                  <li>
+                    <a>
+                      <span class="image"><img src="/employee/images/img.jpg" alt="Profile Image" /></span>
+                      <span>
+                        <span>John Smith</span>
+                        <span class="time">3 mins ago</span>
+                      </span>
+                      <span class="message">
+                        Film festivals used to be do-or-die moments for movie makers. They were where...
+                      </span>
+                    </a>
+                  </li>
+                  <li>
+                    <a>
+                      <span class="image"><img src="/employee/images/img.jpg" alt="Profile Image" /></span>
+                      <span>
+                        <span>John Smith</span>
+                        <span class="time">3 mins ago</span>
+                      </span>
+                      <span class="message">
+                        Film festivals used to be do-or-die moments for movie makers. They were where...
+                      </span>
+                    </a>
+                  </li>
+                  <li>
+                    <a>
+                      <span class="image"><img src="/employee/images/img.jpg" alt="Profile Image" /></span>
+                      <span>
+                        <span>John Smith</span>
+                        <span class="time">3 mins ago</span>
+                      </span>
+                      <span class="message">
+                        Film festivals used to be do-or-die moments for movie makers. They were where...
+                      </span>
+                    </a>
+                  </li>
+                  <li>
+                    <a>
+                      <span class="image"><img src="/employee/images/img.jpg" alt="Profile Image" /></span>
+                      <span>
+                        <span>John Smith</span>
+                        <span class="time">3 mins ago</span>
+                      </span>
+                      <span class="message">
+                        Film festivals used to be do-or-die moments for movie makers. They were where...
+                      </span>
+                    </a>
+                  </li>
+                  <li>
+                    <div class="text-center">
+                      <a>
+                        <strong>See All Alerts</strong>
+                        <i class="fa fa-angle-right"></i>
+                      </a>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+      <!-- /top navigation -->
+
+      <!-- page content -->
+      <div class="right_col" role="main">
+        {{block "content" .}}
+
+        {{end}}
+      </div>
+      <!-- /page content -->
+
+      <!-- footer content -->
+      <footer>
+        {{block "footer" .}}{{end}}
+      </footer>
+      <!-- /footer content -->
+    </div>
+  </div>
+
+  <!-- jQuery -->
+  <script src="/employee/vendors/jquery/dist/jquery.min.js"></script>
+  <!-- Bootstrap -->
+  <script src="/employee/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+  <!-- FastClick -->
+  <script src="/employee/vendors/fastclick/lib/fastclick.js"></script>
+  <!-- NProgress -->
+  <script src="/employee/vendors/nprogress/nprogress.js"></script>
+  <!-- Chart.js -->
+  <script src="/employee/vendors/Chart.js/dist/Chart.min.js"></script>
+  <!-- gauge.js -->
+  <script src="/employee/vendors/gauge.js/dist/gauge.min.js"></script>
+  <!-- bootstrap-progressbar -->
+  <script src="/employee/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
+  <!-- iCheck -->
+  <script src="/employee/vendors/iCheck/icheck.min.js"></script>
+  <!-- Skycons -->
+  <script src="/employee/vendors/skycons/skycons.js"></script>
+  <!-- Flot -->
+  <script src="/employee/vendors/Flot/jquery.flot.js"></script>
+  <script src="/employee/vendors/Flot/jquery.flot.pie.js"></script>
+  <script src="/employee/vendors/Flot/jquery.flot.time.js"></script>
+  <script src="/employee/vendors/Flot/jquery.flot.stack.js"></script>
+  <script src="/employee/vendors/Flot/jquery.flot.resize.js"></script>
+  <!-- Flot plugins -->
+  <script src="/employee/vendors/flot.orderbars/js/jquery.flot.orderBars.js"></script>
+  <script src="/employee/vendors/flot-spline/js/jquery.flot.spline.min.js"></script>
+  <script src="/employee/vendors/flot.curvedlines/curvedLines.js"></script>
+  <!-- DateJS -->
+  <script src="/employee/vendors/DateJS/build/date.js"></script>
+  <!-- JQVMap -->
+  <script src="/employee/vendors/jqvmap/dist/jquery.vmap.js"></script>
+  <script src="/employee/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
+  <script src="/employee/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
+  <!-- bootstrap-daterangepicker -->
+  <script src="/employee/vendors/moment/min/moment.min.js"></script>
+  <script src="/employee/vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
+  <!-- Datatables -->
+  <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+  <script src="/employee/vendors/validator/validator.js"></script>
+  <!-- Custom Theme Scripts -->
+  <script src="/employee/build/js/custom.min.js"></script>
+  <script src="/employee/build/js/app.js"></script>
+
+  <!-- Custom JS -->
+  {{block "js" .}}{{end}}
+  <!-- /Custom CSS -->
+</body>
+
+</html>
+{{end}}

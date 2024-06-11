@@ -100,10 +100,11 @@ Transaction
 {{define "js"}}
 {{$v := index .Data "transaction_type" }}
 <script>
+    let token = localStorage.getItem("token")
     let currentPageIndex = 1;
     let pageSize = 5; // Set initial page size
     function updatePage(pSize, cpIndex) {
-        let token = localStorage.getItem("token")
+        
         let container = document.getElementById("parent")
         let table = document.getElementById("transaction_details")
         let tbody = table.getElementsByTagName("tbody")[0];

@@ -1,97 +1,144 @@
 {{define "base"}}
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>
-        {{block "title" .}}
-        <!-- title of the page -->
-        {{end}}
-    </title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    
-    <!-- Favicon -->
-    <link href="/static/public/img/favicon.ico" rel="icon">
 
-    <!-- Google Web Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Inter:wght@700;800&display=swap" rel="stylesheet">
-    
-    <!-- Icon Font Stylesheet -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" integrity="sha512-dPXYcDub/aeb08c63jRq/k6GaKccl256JQy/AnOq7CAnEZ9FzSL9wSbcZkMp4R26vBsMLFYH4kQ67/bbV8XaCQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Title of the page -->
+    <title>{{block "title" .}}{{end}}</title>
+    <!-- /Title of the page -->
 
-    
-    <link rel="stylesheet" href="/public/assets/css/style.css">
-    {{block "css" .}}
-    <!-- custom css -->
-    {{end}}
+    <!-- Bootstrap -->
+    <link href="/public/admin/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="/public/admin/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- NProgress -->
+    <link href="/public/admin/vendors/nprogress/nprogress.css" rel="stylesheet">
+    <!-- iCheck -->
+    <link href="/public/admin/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
+
+    <!-- bootstrap-progressbar -->
+    <link href="/public/admin/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css" rel="stylesheet">
+    <!-- JQVMap -->
+    <link href="/public/admin/vendors/jqvmap/dist/jqvmap.min.css" rel="stylesheet" />
+    <!-- bootstrap-daterangepicker -->
+    <link href="/public/admin/vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
+
+    <!-- Custom Theme Style -->
+    <link href="/public/admin/build/css/custom.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    {{block "css" .}}{{end}}
+    <!-- /Custom CSS -->
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">FreshCart</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/buy-dates/1">Buy Once</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/plans/bronze">Bronze Plan</a>
-                    </li>
-                    {{if eq .IsAuthenticated 1}}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Admin</a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="/admin/virtual-terminal">Virtual Terminal</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/admin/dashboard">DashBoard</a></li>
-                        </ul>
-                    </li>
-                    {{end}}
 
-                        
-                </ul>
-                <ul>
+<body class="nav-md">
+    <div class="container body">
+        <div class="main_container">
+            <!-- top navigation -->
 
-                </ul>
-                <div class="d-flex">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item me-5"></li>
-                            {{if eq .IsAuthenticated 1}}
-                            <a class="nav-link link-warning" href="/signout">Signout</a>
-                            {{else}}
-                            <a class="nav-link link-warning" href="/signin">Signin</a>
-                            {{end}}
+            <div class="nav_menu">
+                <nav>
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/buy-dates/1">Buy Once</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/plans/bronze">Bronze Plan</a>
                         </li>
                     </ul>
-                </div>
-                <!-- <form class="d-flex">
-                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                    <button class="btn btn-outline-success" type="submit">Search</button>
-                  </form> -->
+                    <ul class="nav navbar-nav navbar-right">
+                        {{if eq .IsAuthenticated 1}}
+                        <li class="nav-item dropdown">
+                            <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown"
+                                aria-expanded="false">
+                                <img src="{{printf "/public/%s/images/%s" (Userlink .User.AccountType) (.User.ImageLink)}}" alt=""><b>{{.User.FirstName}}{{printf " %s" .User.LastName}}</b>
+                                <span class=" fa fa-angle-down"></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-usermenu pull-right">
+                                
+                                <li><a href="{{printf "/%s/general/profile/view" (Userlink .User.AccountType)}}"> Profile</a></li>
+                                <li><a  href="{{printf "/%s/dashboard" (Userlink .User.AccountType)}}">DashBoard</a></li>
+                                <li><a href="{{printf "/%s/virtual-terminal" (Userlink .User.AccountType)}}"><span>virtual Terminal</span></a></li>
+
+                                <li><a href="/signout"><i class="fa fa-sign-out pull-right"></i> Sign Out</a></li>
+                            </ul>
+                        </li>
+                        {{else}}
+                        <li class="nav-item">
+                            <a class="nav-link link-warning" href="/signin">Sign In</a>
+                        </li>
+                        {{end}}
+                    </ul>
+                </nav>
             </div>
+            <!-- /top navigation -->
+
+            <!-- page content -->
+                {{block "content" .}}
+
+                {{end}}
+            <!-- /page content -->
+
+            <!-- footer content -->
+            <footer>
+                {{block "footer" .}}{{end}}
+            </footer>
+            <!-- /footer content -->
         </div>
-    </nav>
-    <!-- End Navbar -->
+    </div>
 
-    {{block "content" .}}
-    <!-- contents for each page -->
-    {{end}}
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script src="/public/assets/js/app.js"></script>
-
+    <!-- jQuery -->
+    <script src="/public/admin/vendors/jquery/dist/jquery.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="/public/admin/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+    <!-- FastClick -->
+    <script src="/public/admin/vendors/fastclick/lib/fastclick.js"></script>
+    <!-- NProgress -->
+    <script src="/public/admin/vendors/nprogress/nprogress.js"></script>
+    <!-- Chart.js -->
+    <script src="/public/admin/vendors/Chart.js/dist/Chart.min.js"></script>
+    <!-- gauge.js -->
+    <script src="/public/admin/vendors/gauge.js/dist/gauge.min.js"></script>
+    <!-- bootstrap-progressbar -->
+    <script src="/public/admin/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
+    <!-- iCheck -->
+    <script src="/public/admin/vendors/iCheck/icheck.min.js"></script>
+    <!-- Skycons -->
+    <script src="/public/admin/vendors/skycons/skycons.js"></script>
+    <!-- Flot -->
+    <script src="/public/admin/vendors/Flot/jquery.flot.js"></script>
+    <script src="/public/admin/vendors/Flot/jquery.flot.pie.js"></script>
+    <script src="/public/admin/vendors/Flot/jquery.flot.time.js"></script>
+    <script src="/public/admin/vendors/Flot/jquery.flot.stack.js"></script>
+    <script src="/public/admin/vendors/Flot/jquery.flot.resize.js"></script>
+    <!-- Flot plugins -->
+    <script src="/public/admin/vendors/flot.orderbars/js/jquery.flot.orderBars.js"></script>
+    <script src="/public/admin/vendors/flot-spline/js/jquery.flot.spline.min.js"></script>
+    <script src="/public/admin/vendors/flot.curvedlines/curvedLines.js"></script>
+    <!-- DateJS -->
+    <script src="/public/admin/vendors/DateJS/build/date.js"></script>
+    <!-- JQVMap -->
+    <script src="/public/admin/vendors/jqvmap/dist/jquery.vmap.js"></script>
+    <script src="/public/admin/vendors/jqvmap/dist/maps/jquery.vmap.world.js"></script>
+    <script src="/public/admin/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js"></script>
+    <!-- bootstrap-daterangepicker -->
+    <script src="/public/admin/vendors/moment/min/moment.min.js"></script>
+    <script src="/public/admin/vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
+    <!-- Datatables -->
+    <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+    <script src="/public/admin/vendors/validator/validator.js"></script>
+    <!-- Custom Theme Scripts -->
+    <script src="/public//admin/build/js/custom.min.js"></script>
+    <script src="/public/admin/build/js/app.js"></script>
     <script>
         function signout () {
             localStorage.removeItem("token")
@@ -127,7 +174,7 @@
             }
         }
     </script>
-
+    
     {{block "js" .}}
     <!-- custom javascript -->
     {{end}}

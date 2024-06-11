@@ -1,171 +1,156 @@
 {{template "base" .}}
 
 {{define "title"}}
-Sign In
+LogIn
 {{end}}
 
 {{define "content"}}
-<div id="form-body">
-    <div class="wrapper">
-        <div class="top-icon-center">
-            <img src="/public/assets/icons/user-solid-white.svg" alt="" width="40px" height="40px">
+<br>
+<br>
+<div class="row">
+  <br><br>
+  <div class="col-md-5 col-sm-10 col-xs-12 col-md-offset-3">
+    <div class="x_panel">
+      <div class="x_title">
+        <h2>Log In</h2>
+        <div class="clearfix"></div>
+      </div>
+      <div class="x_content">
+        <div class="row text-center">
+          <div id="alert_msg"></div>
         </div>
-        <h4 class="label">Sign In</h4>
-        <div class="d-none" id="alert_area">
-            <div class="alert text-center mr-3" id="alert_msg"></div>
-            <div class="spinner-grow spinner-grow-sm mt-3" id="alert_spinner_first" role="status"></div>
-            <div class="spinner-grow spinner-grow-sm mt-3" id="alert_spinner_second" role="status"></div>
-            <div class="spinner-grow spinner-grow-sm mt-3" id="alert_spinner_third" role="status"></div>
-        </div>
-        <div class="login-form">
-            <form action="/signin" method="post" name="signin_form" id="signin_form"
-                class="d-block needs-validation signin_form">
-                <!-- <input type="hidden" id="csrf_token" name="csrf_token" value={{.CSRFToken}}> -->
-                <input type="hidden" name="user_id", id="user_id">
-                <div>
-                    <span class="input-icon">
-                        <img src="/public/assets/icons/user-solid-default.svg" alt="user icon" width="20px"
-                            height="20px">
-                    </span>
-                    <input type="text" class="input" id="user_name" name="user_name" placeholder="Enter username"
-                        autocomplete="new-user_name" required>
-                </div>
-                <div>
-                    <span class="input-icon">
-                        <img src="/public/assets/icons/lock-solid.svg" alt="Lock icon" width="20px" height="20px">
-                    </span>
-                    <input type="password" class="input" id="password" name="password" placeholder="Enter password"
-                        autocomplete="new-password" required>
-                    <span class="input-icon-end" onclick="togglePasswordVisibility('password')">
-                        <img src="/public/assets/icons/eye-slash-solid.svg" alt="" title="See Password" width="20px"
-                            height="20px" id="password-icon">
-                    </span>
-                </div>
-                <div>
-                    <a href="javascript:void(0)" id="submitBtn" class="input" onclick="val()"><span><img
-                                src="/public/assets/icons/arrow-right-to-bracket-solid-default.svg" width="20px"
-                                height="20px" alt=""></span>Login</a>
-                </div>
-            </form>
-        </div>
-        <div style="color: #035cd1;"></div>
-        <div class="label" style="scale: 0.8;">
-            <b>Didn't have an account? <a href="/user-registration" style="color: #035cd1; text-decoration: none;" 
-                onMouseOver="this.style.color='#fd0d2d'"
-                onMouseOut="this.style.color='#035cd1'">Sign Up</a></b>
-        </div>
-        <div class="label" style="scale: 0.8;">
-            <b><a href="/forgot-password" style="color: #0566ca; text-decoration: none;" 
-                onMouseOver="this.style.color='#02375a'"
-                onMouseOut="this.style.color='#0566ca'">Forgotten password?</a></b>
-        </div>
-        <div class="horizontal-line"><span><b>Sign In With</b></span></div>
-        <div id="logo">
-            <span class="go">
-                <a href="/signin-google">
-                    <img src="/public/assets/icons/google-icon.svg" alt="" title="Sign IN With Google" width="40px"
-                        height="40px">
-                </a>
-            </span>
-            <span class="fa">
-                <a href="/signin-facebook">
-                    <img src="/public/assets/icons/facebook-icon.svg" alt="" title="Sign IN With Google" width="40px"
-                        height="40px">
-                </a>
-            </span>
-        </div>
-    </div>
-</div>
-{{end}}
 
+
+        <!-- start form for validation -->
+        <form action="/signin" method="post" name="signin_form" id="signin_form" data-parsley-validate>
+          <input type="hidden" name="user_id" id="user_id">
+          <input type="hidden" name="account_type" id="account_type">
+          <!-- Account Type -->
+          <div class="col-md-12 col-sm-12 col-xs-12 form-group has-feedback">
+            <label>Account Type * :</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            User:
+            <input type="radio" class="flat" name="accType" id="userBtn" value="customers" checked="" required />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Employee:
+            <input type="radio" class="flat" name="accType" id="empBtn" value="employees" />
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Admin:
+            <input type="radio" class="flat" name="accType" id="adminBtn" value="admins" />
+          </div>
+          <!-- UserName -->
+          <div class="col-md-10 col-sm-10 col-xs-12 form-group has-feedback">
+            <label for="username">Username * :</label>
+            <input type="text" class="form-control has-feedback-left" id="username" name="username"
+              placeholder="Enter username" required autocomplete="">
+            <span style="color: rgba(0, 0, 0, 0.75);" class="form-control-feedback left glyphicon glyphicon-user"
+              aria-hidden="true"></span>
+          </div>
+          <div class="col-md-10 col-sm-10 col-xs-12 form-group has-feedback">
+            <label for="password">Password * :</label>
+            <input type="password" class="form-control has-feedback-left" id="password" name="password"
+              placeholder="Enter password" required autocomplete="">
+            <span style="color: rgba(0, 0, 0, 0.75);" class="form-control-feedback left glyphicon glyphicon-lock"
+              aria-hidden="true"></span>
+          </div>
+          <div class="row form-group">
+            <div class="col-md-10 text-right"><label>Forgot Password?<a href="/forgot-password">&nbsp;Reset</a></label></div>
+            <div class="col-md-2 text-right"></div>
+            
+          </div>
+          
+          <!-- buttons -->
+          <div class="form-group">
+            <div id="btns" class="col-md-12 col-sm-12 col-xs-12 col-md-offset-3">
+ 
+              <a onclick="goBack()" class="btn btn-dark">Cancel</a>
+              <a onclick="val()" id="submitBtn" class="btn btn-success">Submit</a>
+            </div>
+          </div>
+
+        </form>
+        <!-- end form for validations -->
+
+        <div class="separator">
+          <div class="clearfix"></div>
+          <div class="row">
+              <div class="col text-right">
+                  <div>
+                      <h4><i class="fa fa-paw"></i> <a href="/" style="color: black;">FreshCart Shop</a><br>
+                          <h6>©2024 All Rights Reserved || <a href="/terms-privacy">Terms & Privacy</a></h6>
+                      </h4>
+
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{{end}}
 {{define "js"}}
 <script>
-    let alert_area = document.getElementById('alert_area');
-    let alert_msg = document.getElementById('alert_msg');
-    let alert_spinner_first = document.getElementById('alert_spinner_first');
-    let alert_spinner_second = document.getElementById('alert_spinner_second');
-    let alert_spinner_third = document.getElementById('alert_spinner_third');
-    function showError(msg) {
-        alert_area.classList.remove('d-none');
-        alert_area.classList.add('d-flex');
-        
-        alert_msg.classList.add('alert-danger')
-        alert_msg.classList.remove('alert-success')
-        alert_msg.innerText = msg
+  function val() {
+    let form = document.getElementById('signin_form')
+    if (form.checkValidity() === false) {
+      this.event.preventDefault();
+      this.event.stopPropagation();
+      form.classList.add('was-validated');
+      return
+    }
+    form.classList.add('was-validated');
+    document.getElementById
 
-        
-        alert_spinner_first.classList.add('text-danger');
-        alert_spinner_first.classList.remove('text-success');
-        
+    let selectedRadio = document.querySelector('input[name="accType"]:checked');
+    let selectedValue = selectedRadio ? selectedRadio.value : null;
+    let userInput = {
+      acc_type: selectedValue,
+      user_name: document.getElementById("username").value,
+      password: document.getElementById("password").value,
+    }
+    console.log(userInput)
 
-        alert_spinner_second.classList.add('text-danger');
-        alert_spinner_second.classList.remove('text-success');
-
-        alert_spinner_third.classList.add('text-danger');
-        alert_spinner_third.classList.remove('text-success');
+    const requestOptions = {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userInput),
     }
 
-    function showSuccess() {
-        alert_area.classList.remove('d-none');
-        alert_area.classList.add('d-flex');
+    fetch('{{.API}}/api/authenticate', requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data)
 
-        alert_msg.classList.add('alert-success')
-        alert_msg.classList.remove('alert-danger')
-        alert_msg.innerText = "Signin Successful.Redirecting..."
-
-        alert_spinner_first.classList.add('text-success');
-        alert_spinner_first.classList.remove('text-danger');
-
-        alert_spinner_second.classList.add('text-success');
-        alert_spinner_second.classList.remove('text-danger');
-
-        alert_spinner_third.classList.add('text-success');
-        alert_spinner_third.classList.remove('text-danger');
-
-    }
-
-    function val() {
-        let form = document.getElementById('signin_form')
-        if (form.checkValidity() === false) {
-            this.event.preventDefault();
-            this.event.stopPropagation();
-            form.classList.add('was-validated');
-            return
+        if (data.error === false) {
+          localStorage.setItem('token', data.authentication_token.token);
+          localStorage.setItem('token_expiry', data.authentication_token.expiry);
+          document.getElementById("alert_msg").innerHTML = `
+            <div class="alert alert-success alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&</span></button>
+              <strong>Login Successful!</strong> please wait...
+            </div>`
+          console.log("login successful")
+          setTimeout(() => {
+            // location.href = "/";
+            document.getElementById("user_id").value = data.user_id;
+            document.getElementById("account_type").value = selectedValue;
+            document.getElementById("signin_form").submit();
+          }, 2000);
+        } else {
+          document.getElementById("alert_msg").innerHTML = `
+            <div class="alert alert-danger alert-dismissible fade in" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>
+              <strong>Wrong Username or password!</strong>
+            </div>`
+          console.log(data.message)
         }
-        form.classList.add('was-validated');
-
-        let userInput = {
-            user_name: document.getElementById("user_name").value,
-            password: document.getElementById("password").value,
-        }
-
-        const requestOptions = {
-            method: 'post',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userInput),
-        }
-
-        fetch('{{.API}}/api/authenticate', requestOptions)
-            .then(response => response.json())
-            .then(data => {
-                console.log(data)
-
-                if (data.error === false) {
-                    localStorage.setItem('token', data.authentication_token.token);
-                    localStorage.setItem('token_expiry', data.authentication_token.expiry);
-                    showSuccess();
-                    setTimeout(() => {
-                        // location.href = "/";
-                        document.getElementById("user_id").value = data.user_id;
-                        document.getElementById("signin_form").submit();
-                    }, 2000);
-                } else {
-                    showError(data.message)
-                }
-            })
-    }
+      })
+  }
 </script>
 {{end}}

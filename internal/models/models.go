@@ -39,6 +39,9 @@ const (
 	USRegex = `^\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$`
 )
 
+// user==3
+// Employee==2
+// Admin==1
 // Date is the type for all dates that holds the info about it
 type Date struct {
 	ID              int       `json:"id"`
@@ -128,8 +131,8 @@ type Employee struct {
 	UserName        string         `json:"user_name"`
 	FirstName       string         `json:"first_name"`
 	LastName        string         `json:"last_name"`
-	Gender        string         `json:"gender"`
-	Address        string         `json:"address"`
+	Gender          string         `json:"gender"`
+	Address         string         `json:"address"`
 	Email           string         `json:"email"`
 	FacebookID      string         `json:"fb_id"`
 	WhatsappID      string         `json:"whatsapp_id"`
@@ -138,14 +141,14 @@ type Employee struct {
 	GithubID        string         `json:"github_id"`
 	Mobile          string         `json:"mobile"`
 	Password        string         `json:"password"`
-	ImageLink       string         `json:"image_link"` //username_profile_id_yy-mm-dd_hh-mm-ss.jpg
+	ImageLink       string         `json:"image_link"`        //username_profile_id_yy-mm-dd_hh-mm-ss.jpg
 	AccountStatusID int            `json:"account_status_id"` //Active = 1, Suspended = 2, Resigned = 3, Ex= (2 or 3)
 	Credits         int            `json:"credits"`
 	TaskCompleted   int            `json:"task_completed"`
 	TaskCancelled   int            `json:"task_cancelled"`
 	Rating          int            `json:"rating"` //5*TaskCompleted/(TaskCompleted+TaskCancelled)
-	NID        string         `json:"nid"`
-	NIDLink        string         `json:"nid_link"`
+	NID             string         `json:"nid"`
+	NIDLink         string         `json:"nid_link"`
 	CreatedAt       time.Time      `json:"created_at"`
 	UpdatedAt       time.Time      `json:"updated_at"`
 	AccountStatus   EmployeeStatus `json:"account_status"`
@@ -167,6 +170,7 @@ type User struct {
 	LastName  string    `json:"last_name"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
+	AccountType string `json:"acc_type"`
 	ImageLink string    `json:"image_link"` //username_profile_id_yy-mm-dd_hh-mm-ss.jpf
 	CreatedAt time.Time `json:"-"`
 	UpdatedAt time.Time `json:"-"`
@@ -174,14 +178,29 @@ type User struct {
 
 // Customer is the type for users
 type Customer struct {
-	ID            int       `json:"id"`
-	FirstName     string    `json:"first_name"`
-	LastName      string    `json:"last_name"`
-	Email         string    `json:"email"`
-	ImageLink     string    `json:"image_link"`     //username_profile_id_yy-mm-dd_hh-mm-ss.jpf
-	AccountStatus int       `json:"account_status"` //0 = deleted, 1 = active, 2 = deactivated
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID              int       `json:"id"`
+	UserName       string    `json:"user_name"`
+	FirstName       string    `json:"first_name"`
+	LastName        string    `json:"last_name"`
+	Email           string    `json:"email"`
+	Password string `json:"password"`
+	ImageLink       string    `json:"image_link"`        //username_profile_id_yy-mm-dd_hh-mm-ss.jpf
+	AccountStatusID int       `json:"account_status_id"` //0 = deleted, 1 = active, 2 = deactivated
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+// UserInintialData is the type for login cradentials
+type UserInitialData struct {
+	UserID          int       `json:"user_id"`
+	Name            string    `json:"name"`
+	Email           string    `json:"email"`
+	Password string `json:"password"`
+	ImageLink       string    `json:"image_link"`        //username_profile_id_yy-mm-dd_hh-mm-ss.jpf
+	AccountType string `json:"acc_type"`
+	AccountStatusID int       `json:"account_status_id"` //0 = deleted, 1 = active, 2 = deactivated
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // ................JSON Response model for invoice microservice........................

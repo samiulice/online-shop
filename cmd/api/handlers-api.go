@@ -98,11 +98,13 @@ func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request)
 
 func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *http.Request) {
 	var data stripePayload
+	
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
 		app.errorLog.Println(err)
 		return
 	}
+	fmt.Println(data)
 
 	card := cards.Card{
 		Secret:   app.config.stripe.secret,
@@ -145,6 +147,7 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 		})
 		if err != nil {
 			app.infoLog.Println(err)
+			app.badRequest(w, err)
 			return
 		}
 		//save transaction info to the database
@@ -162,6 +165,7 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 		})
 		if err != nil {
 			app.errorLog.Println(err)
+			app.badRequest(w,err)
 			return
 		}
 
@@ -178,6 +182,7 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 		})
 		if err != nil {
 			app.errorLog.Println(err)
+			app.badRequest(w,err)
 			return
 		}
 	}
@@ -185,7 +190,7 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 	//call invoice microservice to generate invoice template and send it to the customer email address
 	var product = models.InvoiceProduct{
 		ID:       orderID,
-		Name:     "Ajwa",
+		Name:     "LOWA Men’s Renegade GTX Mid Hiking Boots",
 		Quantity: 1,
 		Amount:   amount,
 	}
@@ -220,6 +225,7 @@ func (app *application) CreateCustomerAndSubscribe(w http.ResponseWriter, r *htt
 
 func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) {
 	var userInput struct {
+		AccType string `json:"acc_type"`
 		UserName string `json:"user_name"`
 		Password string `json:"password"`
 	}
@@ -227,6 +233,7 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		app.badRequest(w, err)
 	}
+	
 
 	var param string
 	if strings.Contains(userInput.UserName, "@"){
@@ -236,22 +243,25 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 	}else {
 		param = "user_name"
 	}
+
 	//get the user from the database by username; send error if invalid username
-	user, err := app.DB.GetUserDetails(userInput.UserName, param)
+	user, err := app.DB.GetUserInitialData(userInput.UserName, param, userInput.AccType)
 	if err != nil {
 		app.invalidCradentials(w)
 		return
 	}
-
+	user.AccountType = userInput.AccType
+	
 	//validate the password; send error if invalid password
 	validPassword, err := app.passwordMatchers(user.Password, userInput.Password)
 	if err != nil || !validPassword {
+		fmt.Println("1",err)
 		app.invalidCradentials(w)
 		return
 	}
 
 	//generate the token
-	token, err := models.GenerateToken(user.ID, 24*time.Hour, models.ScopeAuthentication)
+	token, err := models.GenerateToken(user.UserID, 24*time.Hour, models.ScopeAuthentication)
 	if err != nil {
 		app.badRequest(w, err)
 	}
@@ -273,7 +283,7 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 	payload.Error = false
 	payload.Message = "token generated"
 	payload.Token = token
-	payload.UserID = user.ID
+	payload.UserID = user.UserID
 
 	//send response
 	err = app.writeJSON(w, http.StatusOK, payload)
@@ -307,13 +317,14 @@ func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var userInput struct {
 		UserName string `json:"user_name"`
 		UserType string `json:"user_type"`
-		OTPMethod bool `json:"otp_method"`
+		OTPMethod string `json:"otp_method"`
 	}
 	err := app.readJSON(w, r, &userInput)
 	if err != nil {
 		app.badRequest(w, err)
 		return
 	}
+	fmt.Println(userInput)
 
 	var response struct {
 		Error   bool   `json:"error"`
@@ -322,7 +333,7 @@ func (app *application) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 	//verify the user
 	
-	if userInput.OTPMethod {
+	if userInput.OTPMethod == "mobile" {
 		_, _, _, err := app.DB.VerifyUser(userInput.UserType, "mobile", userInput.UserName)
 		if err == sql.ErrNoRows  { //no data found against mobile number
 			response.Error = true
@@ -514,7 +525,7 @@ func (app *application) SaveCustomer(c models.Customer) (int, error) {
 
 	id, err := app.DB.InsertCustomer(c)
 	if err != nil {
-		return 0, err
+		return 0, errors.New("ErrorInsertCustomer: " + err.Error())
 	}
 	return id, nil
 }
@@ -525,7 +536,7 @@ func (app *application) SaveTransaction(txn models.Transaction) (int, error) {
 
 	id, err := app.DB.InsertTransaction(txn)
 	if err != nil {
-		return 0, err
+		return 0, errors.New("ErrorInsertTransaction: " + err.Error())
 	}
 	return id, nil
 }
@@ -536,7 +547,7 @@ func (app *application) SaveOrder(order models.Order) (int, error) {
 
 	id, err := app.DB.InsertOrder(order)
 	if err != nil {
-		return 0, err
+		return 0, errors.New("ErrorInsertOrder: " + err.Error())
 	}
 	return id, nil
 }

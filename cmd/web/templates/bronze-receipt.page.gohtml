@@ -6,16 +6,16 @@
 {{end}}
 
 {{define "content"}}
-<div class="container">
+<div class="container d-flex justify-content-center">
     {{$txn := index .Data "txnData"}}
     <div class="row">
-        <div class="col">
+        <div class="col-md-6 col-sm-8 col-xs-10">
             <h5 class="text-center">Payment Info</h5>
             <table class="table table-primary table-hover">
                 <tbody>
                 <tr>
                     <th>Customer Name:</th>
-                    <td><span id="first_name"><span id="last_name"></span></td>
+                    <td><span id="customer_name"></span></td>
                 </tr>
                 <tr>
                     <th>Email</th>
@@ -43,11 +43,10 @@
 document.addEventListener("DOMContentLoaded", function() {
 
     // Update HTML elements with retrieved values
-    document.getElementById("first_name").innerHTML = sessionStorage.getItem("first_name");
-    document.getElementById("last_name").innerHTML = sessionStorage.getItem("last_name");
-    document.getElementById("email").innerHTML = sessionStorage.getItem("email");
-    document.getElementById("amount").innerHTML = sessionStorage.getItem("amount");
-    document.getElementById("last_four_digits").innerHTML = sessionStorage.getItem("last_four_digits");
+    document.getElementById("customer_name").innerText = sessionStorage.getItem("bronze_subscriber_first_name") + ' ' +sessionStorage.getItem("bronze_subscriber_last_name");
+    document.getElementById("email").innerText = sessionStorage.getItem("bronze_subscriber_email");
+    document.getElementById("amount").innerText = sessionStorage.getItem("bronze_subscriber_amount");
+    document.getElementById("last_four_digits").innerText = sessionStorage.getItem("bronze_subscriber_last_four_digits");
 
     // Clear sessionStorage after updating HTML elements
     sessionStorage.clear();

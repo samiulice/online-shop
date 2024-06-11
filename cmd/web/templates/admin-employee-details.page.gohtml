@@ -151,8 +151,7 @@ Profile
 {{$v := index .Data "employee-list-type"}}
 
 <script>
-  let token = localStorage.getItem("token")
-  let profileDiv = document.getElementById("employee_profile")
+  let token = localStorage.getItem("token");
 
   const requestOptions = {
     method: 'POST',
@@ -161,8 +160,7 @@ Profile
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + token,
     },
-  }
-
+  };
 
   fetch('{{.API}}/api/admin/analytics/employee/{{$v}}', requestOptions)
     .then(response => response.json())
@@ -172,8 +170,9 @@ Profile
           checkError(data, showErrorInTable());
           return;
         }
-        //populate customer_profile div
-        let img = document.getElementById("employee_picture")
+
+        // Populate customer_profile div
+        let img = document.getElementById("employee_picture");
         img.src = '/admin/images/' + data.image_link;
         img.alt = data.first_name + "'s profile";
         img.title = data.first_name + " " + data.last_name;
@@ -181,39 +180,31 @@ Profile
         document.getElementById("employee_name").innerText = data.first_name + " " + data.last_name;
         if(data.address){ document.getElementById("employee_address").innerText = data.address;}
 
-        document.getElementById("employee_mobile").href = "tel:"+data.mobile;
+        document.getElementById("employee_mobile").href = "tel:" + data.mobile;
         document.getElementById("employee_mobile_text").innerText = data.mobile;
 
         document.getElementById("employee_email").href = "mailto:" + data.email;
         document.getElementById("employee_email").innerText = data.email;
-        
-        let editBtn = ` <a href="/admin/general/employees/edit/${data.id}" id="editBtn" class="btn btn-info btn-xs">
-                            <i class="fa fa-edit"></i> Edit
-                          </a>`;
-        let activateBtn = `<a onclick="manageUserAccount(${data.id}, 'activate')" id="activateBtn" class="btn btn-success btn-xs">
-                            <i class="fa fa-check-circle"></i> Activate
-                          </a>`;
-        let suspendBtn = `<a onclick="manageUserAccount(${data.id}, 'suspend')" id="suspendBtn" class="btn btn-warning btn-xs">
-                            <i class="fa fa-ban"></i> Suspend
-                          </a>`;
-        let deleteBtn = `<a onclick="manageUserAccount(${data.id}, 'revoke')" id="revokebtn" class="btn btn-danger btn-xs">
-                            <i class="fa fa-trash"></i> Delete
-                          </a>`;
-        let rejoinBtn = `<a onclick="manageUserAccount(${data.id}, 'rejoin')" id="rejoinBtn" class="btn btn-success btn-xs">
-          <i class="fa fa-question-circle"></i> Reactive
-        </a>`;       
-        if (data.account_status_id === 1){
-          document.getElementById("controlBtn").innerHTML  = editBtn + suspendBtn + deleteBtn;
-        } else if(data.account_status_id === 2){
-          document.getElementById("controlBtn").innerHTML  = editBtn + activateBtn + deleteBtn;
-        } else if(data.account_status_id === 3){
-          document.getElementById("controlBtn").innerHTML  = rejoinBtn;
+
+        let editBtn = `<a href="/admin/general/employees/edit/${data.id}" id="editBtn" class="btn btn-info btn-xs"><i class="fa fa-edit"></i> Edit</a>`;
+        let activateBtn = `<a onclick="manageUserAccount(${data.id}, 'activate')" id="activateBtn" class="btn btn-success btn-xs"><i class="fa fa-check-circle"></i> Activate</a>`;
+        let suspendBtn = `<a onclick="manageUserAccount(${data.id}, 'suspend')" id="suspendBtn" class="btn btn-warning btn-xs"><i class="fa fa-ban"></i> Suspend</a>`;
+        let deleteBtn = `<a onclick="manageUserAccount(${data.id}, 'revoke')" id="revokebtn" class="btn btn-danger btn-xs"><i class="fa fa-trash"></i> Delete</a>`;
+        let rejoinBtn = `<a onclick="manageUserAccount(${data.id}, 'rejoin')" id="rejoinBtn" class="btn btn-success btn-xs"><i class="fa fa-question-circle"></i> Reactive</a>`;       
+
+        if (data.account_status_id === 1) {
+          document.getElementById("controlBtn").innerHTML = editBtn + suspendBtn + deleteBtn;
+        } else if (data.account_status_id === 2) {
+          document.getElementById("controlBtn").innerHTML = editBtn + activateBtn + deleteBtn;
+        } else if (data.account_status_id === 3) {
+          document.getElementById("controlBtn").innerHTML = rejoinBtn;
         }
-        
-        //employee_stats
+
+        // Employee stats
         let table = document.getElementById("employee_stats");
         let tbody = table.getElementsByTagName("tbody")[0];
-        //accoount status
+
+        // Account status
         let newRow = tbody.insertRow();
         attributeCell = newRow.insertCell();
         attributeCell.appendChild(document.createTextNode("Status"));
@@ -225,15 +216,15 @@ Profile
         } else if (data.account_status_id === 3) {
           valueCell.innerHTML = `<span class="badge rounded-pill bg-danger">Resigned</span>`;
         }
-        //accoount balance == credits
+
+        // Account balance == credits
         newRow = tbody.insertRow();
         attributeCell = newRow.insertCell();
         attributeCell.appendChild(document.createTextNode("Balance"));
         valueCell = newRow.insertCell();
         valueCell.appendChild(document.createTextNode(data.credits));
 
-
-        //accoount ratings
+        // Account ratings
         newRow = tbody.insertRow();
         attributeCell = newRow.insertCell();
         attributeCell.appendChild(document.createTextNode("Ratings"));
@@ -248,7 +239,7 @@ Profile
           valueCell.innerHTML = `<span class="badge rounded-pill bg-danger">${data.rating}</span>`;
         }
 
-        //Tasks stats
+        // Tasks stats
         newRow = tbody.insertRow();
         attributeCell = newRow.insertCell();
         attributeCell.appendChild(document.createTextNode("Task Completed"));
@@ -260,30 +251,25 @@ Profile
         valueCell = newRow.insertCell();
         valueCell.innerHTML = `<span class="badge bg-secondary">${data.task_cancelled}</span>`;
 
-
-
-
-        //Social links div
+        // Social links div
         let linksContainer = document.getElementById('social_links');
-        let link = ``
+        let link = ``;
         if (data.fb_id != "") {
-          link += `<a href="${data.fb_id}" target="_blank"></i><i class="icon fa fa-facebook-square"></i></a>`;
+          link += `<a href="${data.fb_id}" target="_blank"><i class="icon fa fa-facebook-square"></i></a>`;
         }
         if (data.whatsapp_id != "") {
-          link += `<a href="https://wa.me/${data.whatsapp_id}" target="_blank"></i><i class="icon fa fa-phone-square"></i></a>`;
+          link += `<a href="https://wa.me/${data.whatsapp_id}" target="_blank"><i class="icon fa fa-phone-square"></i></a>`;
         }
         if (data.x_id != "") {
-          link += `<a href="${data.x_id}" target="_blank"></i><i class="icon fa fa-twitter-square"></i></a>`;
+          link += `<a href="${data.x_id}" target="_blank"><i class="icon fa fa-twitter-square"></i></a>`;
         }
         if (data.linkedin_id != "") {
-          link += `<a href="${data.linkedin_id}" target="_blank"></i><i class="icon fa fa-linkedin-square"></i></a>`;
+          link += `<a href="${data.linkedin_id}" target="_blank"><i class="icon fa fa-linkedin-square"></i></a>`;
         }
         if (data.github_id != "") {
-          link += `<a href="${data.github_id}" target="_blank"></i><i class="icon fa fa-github-square"></i></a>`;
+          link += `<a href="${data.github_id}" target="_blank"><i class="icon fa fa-github-square"></i></a>`;
         }
-        link+=`<a href="sms:+88${data.mobile}">
-                </i><i class="icon fa fa-comments-o"></i>
-              </a>`
+        link += `<a href="sms:+88${data.mobile}"><i class="icon fa fa-comments-o"></i></a>`;
         linksContainer.innerHTML = link;
       } else {
         console.log("no data");
@@ -302,9 +288,9 @@ Profile
       console.error('There was a problem with the fetch operation:', error);
     });
 
-  //manageUserAccount call the backend route to manage this account
+  // Manage user account function
   function manageUserAccount(id, operation){
-   let prefix = operation.charAt(0).toUpperCase() + operation.slice(1) 
+    let prefix = operation.charAt(0).toUpperCase() + operation.slice(1);
     Swal.fire({
       title: `<span style='color:red;'>${prefix}</span> this account?`,
       text: "You won't be able to undo this!",
@@ -321,22 +307,23 @@ Profile
           if (data.error){
             if (data.message === "Invalid authentication credentials"){
               console.log("not logged in");
-              location.href = "/signin"
+              location.href = "/signin";
             } else {
                 showErrorMessage(data.message);
             }
           } else {
             showSuccessMessage(data.message, function() {
+              console.log("Reloading page...");
               location.reload();
             });
           }
         }); 
       }
     });
-  };
-  //showSuccessMessage shows success message after successfully refunded 
+  }
+
+  // Show success message function
   function showSuccessMessage(message, callback) {
-    // Display the success message (synchronously or with a delay)
     document.getElementById("controlBtn").style.display = "none";
     const Toast = Swal.mixin({
       toast: true,
@@ -352,15 +339,12 @@ Profile
     Toast.fire({
       icon: "success",
       title: message,
+    }).then(() => {
+      callback();
     });
-
-    // Assuming the message should be shown for 3 seconds before reloading
-    (function() {
-        callback();
-    }setTimeout, 3000); // Adjust the delay as needed
   }
 
-  //showErrorMessage shows error message if there is any error occurs during refund process
+  // Show error message function
   function showErrorMessage(msg){
     const Toast = Swal.mixin({
       toast: true,
@@ -379,4 +363,5 @@ Profile
     });
   }
 </script>
+
 {{end}}

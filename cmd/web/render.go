@@ -25,12 +25,14 @@ type templateData struct {
 	StripeSecretKey      string
 	StripePublishableKey string
 	User                 models.User
+	Employee                 models.Employee
 }
 
 var funcMap = template.FuncMap{
 	"titleCase":      titleCase,
 	"formatCurrency": formatCurrency,
 	"formatDate":     formatDate,
+	"Userlink": Userlink,
 }
 
 // titleCase returns a copy of the string s with all Unicode letters mapped to their Unicode title case
@@ -49,6 +51,10 @@ func formatCurrency(n int) string {
 // FormatDate returns Date in a specific format
 func formatDate(t time.Time, format string) string {
 	return t.Format(format)
+}
+// Userlink returns link for user
+func Userlink(str string) string {
+	return str[:len(str)-1]
 }
 
 //go:embed templates/*
@@ -108,6 +114,8 @@ func (app *application) parseTemplate(partials []string, page string) (*template
 	var baseTemplate string
 	if strings.Contains(page, "admin") {
 		baseTemplate = "templates/admin.layout.gohtml"
+	} else if strings.Contains(page, "employee") {
+		baseTemplate = "templates/employee.layout.gohtml"
 	} else {
 		baseTemplate = "templates/base.layout.gohtml"
 	}

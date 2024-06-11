@@ -81,14 +81,14 @@ func (app *application) VirtualTerminalReceipt(w http.ResponseWriter, r *http.Re
 	}
 }
 
-// BuyOnce renders the page for buy single package dates
+// BuyOnce renders the page for buy a pair of boots
 func (app *application) BuyOnce(w http.ResponseWriter, r *http.Request) {
 	urlparts := strings.Split(r.RequestURI, "/")
 	dates_id, _ := strconv.Atoi(urlparts[2])
 
 	date, _ := app.DB.GetDate(dates_id)
 	data := make(map[string]interface{})
-	data["dates"] = date
+	data["product"] = date
 	if err := app.renderTemplate(w, r, "buy-once", &templateData{
 		Data: data,
 	}, "stripe-js-one-off"); err != nil {
@@ -113,6 +113,7 @@ func (app *application) PaymentSucceeded(w http.ResponseWriter, r *http.Request)
 
 	//save customer info to the database
 	c := models.Customer{
+		UserName:  strings.Split(txnData.Email, "@")[0],
 		FirstName: txnData.FirstName,
 		LastName:  txnData.LastName,
 		Email:     txnData.Email,
@@ -121,7 +122,7 @@ func (app *application) PaymentSucceeded(w http.ResponseWriter, r *http.Request)
 	}
 	customerID, err := app.SaveCustomer(c)
 	if err != nil {
-		app.errorLog.Println(err)
+		app.errorLog.Println("ErrorInsertOrder: ",err)
 		return
 	}
 
@@ -199,7 +200,7 @@ func (app *application) PaymentSucceeded(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		app.errorLog.Println(err)
 	}
-	
+
 	//Saving receipt info to the session
 	app.Session.Put(r.Context(), "receipt", txnData)
 
@@ -225,6 +226,7 @@ func (app *application) Receipt(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// BronzePlan renders the page for buy a pair of boots each month
 func (app *application) BronzePlan(w http.ResponseWriter, r *http.Request) {
 	dates, err := app.DB.GetDate(2) //ID = 2 for Bronze Plan
 	if err != nil {
@@ -232,7 +234,7 @@ func (app *application) BronzePlan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := map[string]interface{}{
-		"dates": dates,
+		"product": dates,
 	}
 	err = app.renderTemplate(w, r, "bronze-plan", &templateData{
 		Data: data,
@@ -258,7 +260,12 @@ func (app *application) BronzePlanReceipt(w http.ResponseWriter, r *http.Request
 // Signin renders the Signin page for the app user
 func (app *application) Signin(w http.ResponseWriter, r *http.Request) {
 	if app.Session.Exists(r.Context(), "user_id") {
-		http.Redirect(w, r, "/admin/dashboard", http.StatusSeeOther)
+		account_type := app.Session.Get(r.Context(),"account_type").(string)
+		if account_type == "employees" {
+			http.Redirect(w, r, fmt.Sprintf("public/%s/dashboard", account_type[:len(account_type)-1]), http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, fmt.Sprintf("/%s/dashboard", account_type[:len(account_type)-1]), http.StatusSeeOther)
+		}
 	} else {
 		err := app.renderTemplate(w, r, "signin", &templateData{})
 		if err != nil {
@@ -276,14 +283,23 @@ func (app *application) PostSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user_id := r.Form.Get("user_id")
-	user, err := app.DB.GetUserDetails(user_id, "id")
+	account_type := r.Form.Get("account_type")
+	user, err := app.DB.GetUserDetails(user_id, "id", account_type)
+	user.AccountType = account_type
 	if err != nil {
 		app.errorLog.Println(err)
 		return
 	}
 	app.Session.Put(r.Context(), "user_id", user_id)
+	app.Session.Put(r.Context(), "account_type", account_type)
 	app.Session.Put(r.Context(), "user", user)
-	http.Redirect(w, r, "/admin/dashboard", http.StatusSeeOther)
+	if len(account_type) > 0 {
+		if account_type == "employees" {
+			http.Redirect(w, r, fmt.Sprintf("public/%s/dashboard", account_type[:len(account_type)-1]), http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, fmt.Sprintf("/%s/dashboard", account_type[:len(account_type)-1]), http.StatusSeeOther)
+		}
+	}	
 }
 
 // SignOut helps to sign out an user
@@ -445,6 +461,7 @@ func (app *application) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Println(err)
 	}
 }
+
 // AdminViewProfile renders admin profile page
 func (app *application) AdminViewProfile(w http.ResponseWriter, r *http.Request) {
 	user := app.Session.Get(r.Context(), "user").(models.User)
@@ -452,6 +469,7 @@ func (app *application) AdminViewProfile(w http.ResponseWriter, r *http.Request)
 		app.errorLog.Println(err)
 	}
 }
+
 // AdminAddEmployee renders add admin page
 func (app *application) AdminAddUser(w http.ResponseWriter, r *http.Request) {
 	userType := r.URL.Query().Get("user")
@@ -518,6 +536,15 @@ func (app *application) AdminOrderHistoy(w http.ResponseWriter, r *http.Request)
 		Data: data,
 	})
 	if err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+// .........Handler function for Employee Panel............//
+// EmployeeDashboard renders Employee dashboard
+func (app *application) EmployeeDashboard(w http.ResponseWriter, r *http.Request) {
+	user := app.Session.Get(r.Context(), "user").(models.User)
+	if err := app.renderTemplate(w, r, "employee-dashboard", &templateData{User: user}); err != nil {
 		app.errorLog.Println(err)
 	}
 }
